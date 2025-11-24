@@ -172,6 +172,16 @@ export default function DashboardPage() {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
+        {/* Welcome Message */}
+        <div className="mb-8 p-6 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-lg border border-primary/20">
+          <h2 className="text-2xl font-bold mb-2">
+            Welcome back, {session?.user?.name || "Trader"}! 👋
+          </h2>
+          <p className="text-muted-foreground">
+            Track your trades, analyze performance, and get AI-powered insights to improve your trading strategy.
+          </p>
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">Trading Dashboard</h1>

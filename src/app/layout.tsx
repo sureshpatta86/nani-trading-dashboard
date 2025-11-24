@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Nani Trading Dashboard - Indian Stock Market Tracker",
+  title: "Trading Journal with AI - Indian Stock Market Tracker",
   description: "Track your intraday trades and long-term portfolio with AI-powered insights for NSE/BSE stocks",
 };
 

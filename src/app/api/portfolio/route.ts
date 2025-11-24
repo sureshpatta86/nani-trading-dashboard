@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { fetchStockPrice } from "@/lib/stock-api";
+import { fetchStockPrice, fetchMultipleStockPrices } from "@/lib/stock-api";
 
-// GET /api/portfolio - Fetch all portfolio stocks for the authenticated user
+// GET /api/portfolio - Fetch all portfolio stocks for authenticated user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -73,7 +72,7 @@ export async function GET(request: NextRequest) {
 // POST /api/portfolio - Add a new stock to portfolio
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -151,7 +150,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/portfolio?id=xxx - Update a portfolio stock
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -225,10 +224,10 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/portfolio?id=xxx - Remove a stock from portfolio
+// DELETE /api/portfolio - Delete a stock from portfolio
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

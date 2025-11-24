@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 // GET /api/intraday - Fetch all intraday trades for the authenticated user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,7 +24,23 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "desc" },
     });
 
-    return NextResponse.json(trades);
+    // Transform to match frontend expectations
+    const transformedTrades = trades.map(trade => ({
+      id: trade.id,
+      tradeDate: trade.date,
+      script: trade.script,
+      type: trade.buySell,
+      quantity: trade.quantity,
+      buyPrice: trade.entryPrice,
+      sellPrice: trade.exitPrice,
+      profitLoss: trade.profitLoss,
+      charges: 0, // Not stored separately in current schema
+      netProfitLoss: trade.profitLoss,
+      followSetup: trade.followSetup,
+      remarks: trade.remarks,
+    }));
+
+    return NextResponse.json(transformedTrades);
   } catch (error) {
     console.error("Error fetching intraday trades:", error);
     return NextResponse.json(
@@ -38,7 +53,7 @@ export async function GET(request: NextRequest) {
 // POST /api/intraday - Create a new intraday trade
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -53,46 +68,63 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      date,
-      day,
-      script,
-      buySell,
-      quantity,
-      entryPrice,
-      exitPrice,
-      points,
-      profitLoss,
-      followSetup,
-      remarks,
-    } = body;
+    
+    // Support both old and new field names for backward compatibility
+    const tradeDate = body.tradeDate || body.date;
+    const script = body.script;
+    const type = body.type || body.buySell;
+    const quantity = body.quantity;
+    const buyPrice = body.buyPrice || body.entryPrice;
+    const sellPrice = body.sellPrice || body.exitPrice;
+    const profitLoss = body.profitLoss;
+    const charges = body.charges || 0;
+    const netProfitLoss = body.netProfitLoss || profitLoss;
+    const followSetup = body.followSetup ?? true;
+    const remarks = body.remarks;
 
     // Validation
-    if (!date || !script || !buySell || !quantity || !entryPrice || !exitPrice) {
+    if (!tradeDate || !script || !type || !quantity || !buyPrice || !sellPrice) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
+    const dateObj = new Date(tradeDate);
+    const points = parseFloat(sellPrice) - parseFloat(buyPrice);
+
     const trade = await prisma.intradayTrade.create({
       data: {
         userId: user.id,
-        date: new Date(date),
-        day: day || new Date(date).toLocaleDateString('en-IN', { weekday: 'long' }),
+        date: dateObj,
+        day: dateObj.toLocaleDateString('en-IN', { weekday: 'long' }),
         script,
-        buySell,
+        buySell: type,
         quantity: parseInt(quantity),
-        entryPrice: parseFloat(entryPrice),
-        exitPrice: parseFloat(exitPrice),
-        points: parseFloat(points || (exitPrice - entryPrice)),
-        profitLoss: parseFloat(profitLoss),
-        followSetup: followSetup === true || followSetup === "true",
+        entryPrice: parseFloat(buyPrice),
+        exitPrice: parseFloat(sellPrice),
+        points,
+        profitLoss: parseFloat(netProfitLoss),
+        followSetup: Boolean(followSetup),
         remarks: remarks || null,
       },
     });
 
-    return NextResponse.json(trade, { status: 201 });
+    // Return in format expected by frontend
+    return NextResponse.json({
+      id: trade.id,
+      tradeDate: trade.date,
+      script: trade.script,
+      type: trade.buySell,
+      quantity: trade.quantity,
+      buyPrice: trade.entryPrice,
+      sellPrice: trade.exitPrice,
+      profitLoss: trade.profitLoss,
+      charges,
+      netProfitLoss: trade.profitLoss,
+      followSetup: trade.followSetup,
+      remarks: trade.remarks,
+    }, { status: 201 });
   } catch (error) {
     console.error("Error creating intraday trade:", error);
     return NextResponse.json(
@@ -105,7 +137,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/intraday?id=xxx - Update an existing intraday trade
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -173,7 +205,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/intraday?id=xxx - Delete an intraday trade
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
