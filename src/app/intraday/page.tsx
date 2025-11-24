@@ -24,7 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, Download } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, Download, Upload } from "lucide-react";
+import { CSVImportDialog } from "@/components/csv-import-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface IntradayTrade {
   id: string;
@@ -44,10 +46,12 @@ interface IntradayTrade {
 export default function IntradayLogPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
   const [trades, setTrades] = useState<IntradayTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     tradeDate: new Date().toISOString().split("T")[0],
@@ -197,10 +201,9 @@ export default function IntradayLogPage() {
       "Quantity",
       "Buy Price",
       "Sell Price",
-      "P&L",
       "Charges",
-      "Net P&L",
       "Remarks",
+      "Follow Setup",
     ];
 
     const rows = trades.map((trade) => [
@@ -210,10 +213,9 @@ export default function IntradayLogPage() {
       trade.quantity,
       trade.buyPrice.toFixed(2),
       trade.sellPrice.toFixed(2),
-      trade.profitLoss.toFixed(2),
       trade.charges.toFixed(2),
-      trade.netProfitLoss.toFixed(2),
       trade.remarks || "",
+      trade.followSetup ? "Yes" : "No",
     ]);
 
     const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
@@ -223,6 +225,125 @@ export default function IntradayLogPage() {
     a.href = url;
     a.download = `intraday-trades-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
+  };
+
+  const handleCSVImport = async (data: Record<string, string>[]): Promise<{ success: number; errors: string[] }> => {
+    const errors: string[] = [];
+    let successCount = 0;
+
+    // Process all rows in parallel with proper error handling
+    const results = await Promise.all(
+      data.map(async (row, i) => {
+        try {
+        // Parse date - handle both DD/MM/YYYY and MM/DD/YYYY formats
+        let tradeDate: Date;
+        const dateStr = row.Date?.trim();
+        
+        if (!dateStr) {
+          return { success: false, error: `Row ${i + 1}: Missing date` };
+        }
+
+        // Try to parse the date
+        const dateParts = dateStr.split("/");
+        if (dateParts.length === 3) {
+          // Assume DD/MM/YYYY format for Indian locale
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // months are 0-indexed
+          const year = parseInt(dateParts[2]);
+          tradeDate = new Date(year, month, day);
+        } else {
+          // Try ISO format
+          tradeDate = new Date(dateStr);
+        }
+
+        if (isNaN(tradeDate.getTime())) {
+          return { success: false, error: `Row ${i + 1}: Invalid date format "${dateStr}"` };
+        }
+
+        const script = row.Script?.trim();
+        const type = row.Type?.trim().toUpperCase();
+        const quantity = parseFloat(row.Quantity);
+        const buyPrice = parseFloat(row["Buy Price"]);
+        const sellPrice = parseFloat(row["Sell Price"]);
+        const charges = parseFloat(row.Charges || "0");
+        const remarks = row.Remarks?.trim() || "";
+        const followSetup = row["Follow Setup"]?.trim().toLowerCase() === "yes";
+
+        // Validation
+        if (!script) {
+          return { success: false, error: `Row ${i + 1}: Missing script/symbol` };
+        }
+
+        if (!type || (type !== "BUY" && type !== "SELL")) {
+          return { success: false, error: `Row ${i + 1}: Invalid type "${row.Type}" (must be BUY or SELL)` };
+        }
+
+        if (isNaN(quantity) || quantity <= 0) {
+          return { success: false, error: `Row ${i + 1}: Invalid quantity "${row.Quantity}"` };
+        }
+
+        if (isNaN(buyPrice) || buyPrice <= 0) {
+          return { success: false, error: `Row ${i + 1}: Invalid buy price "${row["Buy Price"]}"` };
+        }
+
+        if (isNaN(sellPrice) || sellPrice <= 0) {
+          return { success: false, error: `Row ${i + 1}: Invalid sell price "${row["Sell Price"]}"` };
+        }
+
+        // Calculate P&L
+        const profitLoss = (sellPrice - buyPrice) * quantity;
+        const netProfitLoss = profitLoss - charges;
+
+        // Create trade
+        const response = await fetch("/api/intraday", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tradeDate: tradeDate.toISOString(),
+            script: script.toUpperCase(),
+            type,
+            quantity,
+            buyPrice,
+            sellPrice,
+            profitLoss,
+            charges,
+            netProfitLoss,
+            remarks,
+            followSetup,
+          }),
+        });
+
+        if (response.ok) {
+          return { success: true };
+        } else {
+          const error = await response.json();
+          return { success: false, error: `Row ${i + 1}: ${error.error || "Failed to create trade"}` };
+        }
+      } catch (error) {
+        return { success: false, error: `Row ${i + 1}: ${(error as Error).message || "Failed to process row"}` };
+      }
+    })
+  );
+
+    // Process results
+    results.forEach(result => {
+      if (result.success) {
+        successCount++;
+      } else if (result.error) {
+        errors.push(result.error);
+      }
+    });
+
+    // Refresh trades list
+    if (successCount > 0) {
+      await fetchTrades();
+      toast({
+        title: "Import Successful",
+        description: `Imported ${successCount} trade(s) successfully.`,
+      });
+    }
+
+    return { success: successCount, errors };
   };
 
   if (status === "loading" || isLoading) {
@@ -247,11 +368,40 @@ export default function IntradayLogPage() {
           <h1 className="text-3xl font-bold">Intraday Trading Log</h1>
           <p className="text-muted-foreground">Track your daily trades and performance</p>
         </div>
-        <Button onClick={exportToCSV} variant="outline" disabled={trades.length === 0}>
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setImportDialogOpen(true)} variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={exportToCSV} variant="outline" disabled={trades.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
+
+      {/* CSV Import Dialog */}
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleCSVImport}
+        expectedHeaders={[
+          "Date",
+          "Script",
+          "Type",
+          "Quantity",
+          "Buy Price",
+          "Sell Price",
+          "Charges",
+          "Remarks",
+          "Follow Setup",
+        ]}
+        title="Import Intraday Trades"
+        description="Upload a CSV file to import multiple trades at once. Date format should be DD/MM/YYYY."
+        templateExample={`Date,Script,Type,Quantity,Buy Price,Sell Price,Charges,Remarks,Follow Setup
+24/11/2025,RELIANCE,BUY,100,2500.00,2520.00,20.00,Good trade,Yes
+24/11/2025,TCS,SELL,50,3400.00,3390.00,15.00,Stop loss hit,No`}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">

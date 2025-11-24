@@ -1,0 +1,11 @@
+Date,Script,Type,Quantity,Buy Price,Sell Price,Charges,Remarks,Follow Setup
+24/11/2025,RELIANCE,BUY,100,2500.00,2520.00,20.00,Good trade following setup,Yes
+24/11/2025,TCS,SELL,50,3400.00,3390.00,15.00,Stop loss hit,No
+23/11/2025,INFY,BUY,75,1450.00,1470.00,18.00,Breakout trade,Yes
+23/11/2025,HDFCBANK,SELL,60,1620.00,1610.00,17.00,False signal,No
+22/11/2025,WIPRO,BUY,200,410.00,418.00,25.00,Gap up trade,Yes
+22/11/2025,ITC,BUY,150,425.00,430.00,22.00,Support bounce,Yes
+21/11/2025,BHARTIARTL,SELL,80,950.00,945.00,19.00,Resistance rejection,Yes
+21/11/2025,SBIN,BUY,100,580.00,590.00,21.00,Bank sector strength,Yes
+20/11/2025,AXISBANK,SELL,70,1050.00,1040.00,20.00,Profit booking,Yes
+20/11/2025,MARUTI,BUY,25,9500.00,9650.00,30.00,Auto sector rally,Yes
