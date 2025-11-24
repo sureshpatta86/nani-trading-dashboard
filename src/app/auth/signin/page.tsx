@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Chrome, TrendingUp, LineChart, Brain, Shield, Zap, Mail, Lock, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SignIn() {
   const router = useRouter();
@@ -146,7 +147,12 @@ export default function SignIn() {
       </div>
 
       {/* Right Side - Sign In/Up Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background relative">
+        {/* Theme Toggle - Top Right */}
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
+        
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">

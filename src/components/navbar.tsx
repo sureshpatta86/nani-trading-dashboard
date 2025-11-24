@@ -22,6 +22,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -66,8 +67,9 @@ export function Navbar() {
             </div>
           </div>
 
-          {session?.user && (
-            <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {session?.user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
@@ -111,8 +113,8 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </nav>
