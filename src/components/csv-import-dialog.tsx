@@ -272,7 +272,9 @@ export function CSVImportDialog({
               disabled={!file || previewData.length === 0 || isProcessing}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {isProcessing ? "Importing..." : `Import ${previewData.length > 0 ? previewData.length : ""} Rows`}
+              {isProcessing 
+                ? "Importing..." 
+                : `Import ${previewData.length > 0 ? previewData.length + " " : ""}Rows`}
             </Button>
           )}
         </DialogFooter>

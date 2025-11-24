@@ -231,16 +231,16 @@ export default function IntradayLogPage() {
     const errors: string[] = [];
     let successCount = 0;
 
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      try {
+    // Process all rows in parallel with proper error handling
+    const results = await Promise.all(
+      data.map(async (row, i) => {
+        try {
         // Parse date - handle both DD/MM/YYYY and MM/DD/YYYY formats
         let tradeDate: Date;
         const dateStr = row.Date?.trim();
         
         if (!dateStr) {
-          errors.push(`Row ${i + 1}: Missing date`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Missing date` };
         }
 
         // Try to parse the date
@@ -257,8 +257,7 @@ export default function IntradayLogPage() {
         }
 
         if (isNaN(tradeDate.getTime())) {
-          errors.push(`Row ${i + 1}: Invalid date format "${dateStr}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid date format "${dateStr}"` };
         }
 
         const script = row.Script?.trim();
@@ -272,28 +271,23 @@ export default function IntradayLogPage() {
 
         // Validation
         if (!script) {
-          errors.push(`Row ${i + 1}: Missing script/symbol`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Missing script/symbol` };
         }
 
         if (!type || (type !== "BUY" && type !== "SELL")) {
-          errors.push(`Row ${i + 1}: Invalid type "${row.Type}" (must be BUY or SELL)`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid type "${row.Type}" (must be BUY or SELL)` };
         }
 
         if (isNaN(quantity) || quantity <= 0) {
-          errors.push(`Row ${i + 1}: Invalid quantity "${row.Quantity}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid quantity "${row.Quantity}"` };
         }
 
         if (isNaN(buyPrice) || buyPrice <= 0) {
-          errors.push(`Row ${i + 1}: Invalid buy price "${row["Buy Price"]}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid buy price "${row["Buy Price"]}"` };
         }
 
         if (isNaN(sellPrice) || sellPrice <= 0) {
-          errors.push(`Row ${i + 1}: Invalid sell price "${row["Sell Price"]}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid sell price "${row["Sell Price"]}"` };
         }
 
         // Calculate P&L
@@ -320,15 +314,25 @@ export default function IntradayLogPage() {
         });
 
         if (response.ok) {
-          successCount++;
+          return { success: true };
         } else {
           const error = await response.json();
-          errors.push(`Row ${i + 1}: ${error.error || "Failed to create trade"}`);
+          return { success: false, error: `Row ${i + 1}: ${error.error || "Failed to create trade"}` };
         }
       } catch (error) {
-        errors.push(`Row ${i + 1}: ${(error as Error).message || "Failed to process row"}`);
+        return { success: false, error: `Row ${i + 1}: ${(error as Error).message || "Failed to process row"}` };
       }
-    }
+    })
+  );
+
+    // Process results
+    results.forEach(result => {
+      if (result.success) {
+        successCount++;
+      } else if (result.error) {
+        errors.push(result.error);
+      }
+    });
 
     // Refresh trades list
     if (successCount > 0) {

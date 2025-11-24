@@ -202,9 +202,13 @@ export default function PortfolioPage() {
     const errors: string[] = [];
     let successCount = 0;
 
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      try {
+    // Create a set of existing stocks for O(1) lookup
+    const existingSymbols = new Set(stocks.map(s => s.symbol));
+
+    // Process all rows in parallel with proper error handling
+    const results = await Promise.all(
+      data.map(async (row, i) => {
+        try {
         // Parse date - handle both DD/MM/YYYY and MM/DD/YYYY formats
         let purchaseDate: Date;
         const dateStr = row["Purchase Date"]?.trim();
@@ -254,10 +258,8 @@ export default function PortfolioPage() {
         }
 
         // Check if stock already exists
-        const existingStock = stocks.find(s => s.symbol === symbol);
-        if (existingStock) {
-          errors.push(`Row ${i + 1}: Stock ${symbol} already exists in portfolio`);
-          continue;
+        if (existingSymbols.has(symbol)) {
+          return { success: false, error: `Row ${i + 1}: Stock ${symbol} already exists in portfolio` };
         }
 
         // Create stock
@@ -274,15 +276,25 @@ export default function PortfolioPage() {
         });
 
         if (response.ok) {
-          successCount++;
+          return { success: true };
         } else {
           const error = await response.json();
-          errors.push(`Row ${i + 1}: ${error.error || "Failed to add stock"}`);
+          return { success: false, error: `Row ${i + 1}: ${error.error || "Failed to add stock"}` };
         }
       } catch (error) {
-        errors.push(`Row ${i + 1}: ${(error as Error).message || "Failed to process row"}`);
+        return { success: false, error: `Row ${i + 1}: ${(error as Error).message || "Failed to process row"}` };
       }
-    }
+    })
+  );
+
+    // Process results
+    results.forEach(result => {
+      if (result.success) {
+        successCount++;
+      } else if (result.error) {
+        errors.push(result.error);
+      }
+    });
 
     // Refresh stocks list
     if (successCount > 0) {
