@@ -198,7 +198,7 @@ export default function PortfolioPage() {
     a.click();
   };
 
-  const handleCSVImport = async (data: any[]): Promise<{ success: number; errors: string[] }> => {
+  const handleCSVImport = async (data: Record<string, string>[]): Promise<{ success: number; errors: string[] }> => {
     const errors: string[] = [];
     let successCount = 0;
 
@@ -279,8 +279,8 @@ export default function PortfolioPage() {
           const error = await response.json();
           errors.push(`Row ${i + 1}: ${error.error || "Failed to add stock"}`);
         }
-      } catch (error: any) {
-        errors.push(`Row ${i + 1}: ${error.message || "Failed to process row"}`);
+      } catch (error) {
+        errors.push(`Row ${i + 1}: ${(error as Error).message || "Failed to process row"}`);
       }
     }
 

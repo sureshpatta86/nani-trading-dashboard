@@ -30,8 +30,6 @@ export async function GET(request: NextRequest) {
 
     // Update prices if requested
     if (updatePrices && stocks.length > 0) {
-      const symbols = stocks.map(s => s.stockName);
-      
       // Fetch prices for all stocks
       for (const stock of stocks) {
         const priceData = await fetchStockPrice(stock.stockName);
@@ -107,7 +105,6 @@ export async function POST(request: NextRequest) {
     const stockName = (body.symbol || body.stockName)?.toUpperCase();
     const averagePrice = body.buyPrice || body.averagePrice;
     const quantity = body.quantity;
-    const purchaseDate = body.purchaseDate;
 
     // Validation
     if (!stockName || !averagePrice || !quantity) {
@@ -223,7 +220,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, number | null> = {};
     
     if (body.averagePrice !== undefined) {
       updateData.averagePrice = parseFloat(body.averagePrice);

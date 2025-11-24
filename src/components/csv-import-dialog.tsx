@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 interface CSVImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImport: (data: any[]) => Promise<{ success: number; errors: string[] }>;
+  onImport: (data: Record<string, string>[]) => Promise<{ success: number; errors: string[] }>;
   expectedHeaders: string[];
   title: string;
   description: string;
@@ -35,7 +35,7 @@ export function CSVImportDialog({
 }: CSVImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [previewData, setPreviewData] = useState<Record<string, string>[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [result, setResult] = useState<{ success: number; errors: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +74,7 @@ export function CSVImportDialog({
         }
 
         // Show preview (first 5 rows)
-        setPreviewData(results.data.slice(0, 5) as any[]);
+        setPreviewData(results.data.slice(0, 5) as Record<string, string>[]);
       },
       error: (error) => {
         setErrors([`Failed to parse CSV: ${error.message}`]);
@@ -95,7 +95,7 @@ export function CSVImportDialog({
         skipEmptyLines: true,
         complete: async (results) => {
           try {
-            const importResult = await onImport(results.data as any[]);
+            const importResult = await onImport(results.data as Record<string, string>[]);
             setResult(importResult);
             
             if (importResult.success > 0) {
@@ -106,8 +106,8 @@ export function CSVImportDialog({
                 fileInputRef.current.value = "";
               }
             }
-          } catch (error: any) {
-            setErrors([error.message || "Failed to import data"]);
+          } catch (error) {
+            setErrors([(error as Error).message || "Failed to import data"]);
           } finally {
             setIsProcessing(false);
           }
@@ -117,8 +117,8 @@ export function CSVImportDialog({
           setIsProcessing(false);
         },
       });
-    } catch (error: any) {
-      setErrors([error.message || "Failed to import data"]);
+    } catch (error) {
+      setErrors([(error as Error).message || "Failed to import data"]);
       setIsProcessing(false);
     }
   };
@@ -248,7 +248,7 @@ export function CSVImportDialog({
                   <tbody>
                     {previewData.map((row, index) => (
                       <tr key={index} className="border-t">
-                        {Object.values(row).map((value: any, cellIndex) => (
+                        {Object.values(row).map((value: string, cellIndex) => (
                           <td key={cellIndex} className="px-4 py-2">
                             {String(value)}
                           </td>

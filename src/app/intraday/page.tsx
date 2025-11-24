@@ -227,7 +227,7 @@ export default function IntradayLogPage() {
     a.click();
   };
 
-  const handleCSVImport = async (data: any[]): Promise<{ success: number; errors: string[] }> => {
+  const handleCSVImport = async (data: Record<string, string>[]): Promise<{ success: number; errors: string[] }> => {
     const errors: string[] = [];
     let successCount = 0;
 
@@ -325,8 +325,8 @@ export default function IntradayLogPage() {
           const error = await response.json();
           errors.push(`Row ${i + 1}: ${error.error || "Failed to create trade"}`);
         }
-      } catch (error: any) {
-        errors.push(`Row ${i + 1}: ${error.message || "Failed to process row"}`);
+      } catch (error) {
+        errors.push(`Row ${i + 1}: ${(error as Error).message || "Failed to process row"}`);
       }
     }
 
