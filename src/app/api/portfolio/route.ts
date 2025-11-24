@@ -59,7 +59,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(stocks);
+    // Transform to match frontend expectations
+    const transformedStocks = stocks.map(stock => ({
+      id: stock.id,
+      symbol: stock.stockName,
+      name: undefined, // Not stored in current schema
+      quantity: stock.quantity,
+      buyPrice: stock.averagePrice,
+      currentPrice: stock.currentPrice || 0,
+      investedValue: stock.averagePrice * stock.quantity,
+      currentValue: (stock.currentPrice || 0) * stock.quantity,
+      profitLoss: stock.profitLoss || 0,
+      profitLossPercentage: stock.profitLossPercent || 0,
+      purchaseDate: stock.createdAt,
+    }));
+
+    return NextResponse.json(transformedStocks);
   } catch (error) {
     console.error("Error fetching portfolio:", error);
     return NextResponse.json(
@@ -87,12 +102,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { stockName, averagePrice, quantity } = body;
+    
+    // Support both field names for flexibility
+    const stockName = (body.symbol || body.stockName)?.toUpperCase();
+    const averagePrice = body.buyPrice || body.averagePrice;
+    const quantity = body.quantity;
+    const purchaseDate = body.purchaseDate;
 
     // Validation
     if (!stockName || !averagePrice || !quantity) {
       return NextResponse.json(
-        { error: "Missing required fields: stockName, averagePrice, quantity" },
+        { error: "Missing required fields: symbol/stockName, buyPrice/averagePrice, quantity" },
         { status: 400 }
       );
     }
@@ -102,7 +122,7 @@ export async function POST(request: NextRequest) {
       where: {
         userId_stockName: {
           userId: user.id,
-          stockName: stockName.toUpperCase(),
+          stockName: stockName,
         },
       },
     });
@@ -127,7 +147,7 @@ export async function POST(request: NextRequest) {
     const stock = await prisma.portfolioStock.create({
       data: {
         userId: user.id,
-        stockName: stockName.toUpperCase(),
+        stockName: stockName,
         averagePrice: parseFloat(averagePrice),
         quantity: parseInt(quantity),
         currentPrice,
@@ -137,7 +157,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(stock, { status: 201 });
+    // Transform to match frontend expectations
+    const transformedStock = {
+      id: stock.id,
+      symbol: stock.stockName,
+      name: undefined,
+      quantity: stock.quantity,
+      buyPrice: stock.averagePrice,
+      currentPrice: stock.currentPrice || 0,
+      investedValue: stock.averagePrice * stock.quantity,
+      currentValue: (stock.currentPrice || 0) * stock.quantity,
+      profitLoss: stock.profitLoss || 0,
+      profitLossPercentage: stock.profitLossPercent || 0,
+      purchaseDate: stock.createdAt,
+    };
+
+    return NextResponse.json(transformedStock, { status: 201 });
   } catch (error) {
     console.error("Error adding stock to portfolio:", error);
     return NextResponse.json(

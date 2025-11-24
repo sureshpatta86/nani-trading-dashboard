@@ -16,7 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, RefreshCw, Download } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, RefreshCw, Download, Upload } from "lucide-react";
+import { CSVImportDialog } from "@/components/csv-import-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface PortfolioStock {
   id: string;
@@ -35,11 +37,13 @@ interface PortfolioStock {
 export default function PortfolioPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
   const [stocks, setStocks] = useState<PortfolioStock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     symbol: "",
@@ -174,11 +178,6 @@ export default function PortfolioPage() {
       "Name",
       "Quantity",
       "Buy Price",
-      "Current Price",
-      "Invested Value",
-      "Current Value",
-      "P&L",
-      "P&L %",
       "Purchase Date",
     ];
 
@@ -187,11 +186,6 @@ export default function PortfolioPage() {
       stock.name || "",
       stock.quantity,
       stock.buyPrice.toFixed(2),
-      stock.currentPrice.toFixed(2),
-      stock.investedValue.toFixed(2),
-      stock.currentValue.toFixed(2),
-      stock.profitLoss.toFixed(2),
-      stock.profitLossPercentage.toFixed(2),
       new Date(stock.purchaseDate).toLocaleDateString("en-IN"),
     ]);
 
@@ -202,6 +196,104 @@ export default function PortfolioPage() {
     a.href = url;
     a.download = `portfolio-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
+  };
+
+  const handleCSVImport = async (data: any[]): Promise<{ success: number; errors: string[] }> => {
+    const errors: string[] = [];
+    let successCount = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      try {
+        // Parse date - handle both DD/MM/YYYY and MM/DD/YYYY formats
+        let purchaseDate: Date;
+        const dateStr = row["Purchase Date"]?.trim();
+        
+        if (!dateStr) {
+          errors.push(`Row ${i + 1}: Missing purchase date`);
+          continue;
+        }
+
+        // Try to parse the date
+        const dateParts = dateStr.split("/");
+        if (dateParts.length === 3) {
+          // Assume DD/MM/YYYY format for Indian locale
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // months are 0-indexed
+          const year = parseInt(dateParts[2]);
+          purchaseDate = new Date(year, month, day);
+        } else {
+          // Try ISO format
+          purchaseDate = new Date(dateStr);
+        }
+
+        if (isNaN(purchaseDate.getTime())) {
+          errors.push(`Row ${i + 1}: Invalid date format "${dateStr}"`);
+          continue;
+        }
+
+        const symbol = row.Symbol?.trim().toUpperCase();
+        const name = row.Name?.trim() || "";
+        const quantity = parseFloat(row.Quantity);
+        const buyPrice = parseFloat(row["Buy Price"]);
+
+        // Validation
+        if (!symbol) {
+          errors.push(`Row ${i + 1}: Missing symbol`);
+          continue;
+        }
+
+        if (isNaN(quantity) || quantity <= 0) {
+          errors.push(`Row ${i + 1}: Invalid quantity "${row.Quantity}"`);
+          continue;
+        }
+
+        if (isNaN(buyPrice) || buyPrice <= 0) {
+          errors.push(`Row ${i + 1}: Invalid buy price "${row["Buy Price"]}"`);
+          continue;
+        }
+
+        // Check if stock already exists
+        const existingStock = stocks.find(s => s.symbol === symbol);
+        if (existingStock) {
+          errors.push(`Row ${i + 1}: Stock ${symbol} already exists in portfolio`);
+          continue;
+        }
+
+        // Create stock
+        const response = await fetch("/api/portfolio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            symbol,
+            name: name || undefined,
+            quantity,
+            buyPrice,
+            purchaseDate: purchaseDate.toISOString(),
+          }),
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          const error = await response.json();
+          errors.push(`Row ${i + 1}: ${error.error || "Failed to add stock"}`);
+        }
+      } catch (error: any) {
+        errors.push(`Row ${i + 1}: ${error.message || "Failed to process row"}`);
+      }
+    }
+
+    // Refresh stocks list
+    if (successCount > 0) {
+      await fetchPortfolio();
+      toast({
+        title: "Import Successful",
+        description: `Imported ${successCount} stock(s) successfully.`,
+      });
+    }
+
+    return { success: successCount, errors };
   };
 
   if (status === "loading" || isLoading) {
@@ -238,12 +330,35 @@ export default function PortfolioPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             Refresh Prices
           </Button>
+          <Button onClick={() => setImportDialogOpen(true)} variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
           <Button onClick={exportToCSV} variant="outline" disabled={stocks.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
         </div>
       </div>
+
+      {/* CSV Import Dialog */}
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleCSVImport}
+        expectedHeaders={[
+          "Symbol",
+          "Name",
+          "Quantity",
+          "Buy Price",
+          "Purchase Date",
+        ]}
+        title="Import Portfolio Stocks"
+        description="Upload a CSV file to import multiple stocks at once. Date format should be DD/MM/YYYY. Symbol should include .NS or .BO suffix."
+        templateExample={`Symbol,Name,Quantity,Buy Price,Purchase Date
+RELIANCE.NS,Reliance Industries,100,2500.00,15/11/2025
+TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
