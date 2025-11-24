@@ -9,7 +9,10 @@ A modern, AI-powered trading dashboard for Indian stock market (NSE/BSE) traders
 - **💼 Portfolio Management**: Track long-term holdings with auto-updated prices from NSE/BSE
 - **🤖 AI-Powered Insights**: Get GPT-4o-mini analysis of your trading patterns and mistakes
 - **📈 Beautiful Visualizations**: Charts for P&L curves, win/loss ratios, monthly performance
-- **📁 Export Data**: Download trades and portfolio as CSV or Excel with formatting
+- **📁 Import/Export Data**: 
+  - **Import CSV**: Bulk import trades and portfolio from CSV files with validation
+  - **Export CSV**: Download trades and portfolio as CSV with proper formatting
+  - **Export Excel**: Download as Excel with formatting (coming soon)
 - **🔐 Secure Authentication**: Gmail OAuth integration via NextAuth.js
 - **🌙 Dark Mode**: Modern UI with shadcn/ui components and dark theme
 - **₹ Indian Rupee Formatting**: All currency displayed in INR with proper formatting
@@ -23,7 +26,7 @@ A modern, AI-powered trading dashboard for Indian stock market (NSE/BSE) traders
 - **Authentication**: NextAuth.js with Google OAuth
 - **Stock Data**: Finnhub API (free tier) for NSE/BSE prices
 - **AI**: OpenAI GPT-4o-mini for trading insights
-- **Export**: PapaParse (CSV), ExcelJS (Excel)
+- **Import/Export**: PapaParse (CSV parsing and export), ExcelJS (Excel export)
 
 ## 🚀 Getting Started
 
@@ -123,6 +126,13 @@ A modern, AI-powered trading dashboard for Indian stock market (NSE/BSE) traders
    - Add remarks/notes
 3. Click "Add Trade"
 
+**Bulk Import via CSV:**
+1. Click "Import CSV" button
+2. Upload a CSV file with columns: Date, Script, Type, Quantity, Buy Price, Sell Price, Charges, Remarks, Follow Setup
+3. Preview your data and click "Import"
+4. See sample file: `sample-intraday-trades.csv`
+5. Read the full guide: [CSV Import Guide](CSV_IMPORT_GUIDE.md)
+
 ### Managing Portfolio
 
 1. Go to "Portfolio" page
@@ -132,6 +142,13 @@ A modern, AI-powered trading dashboard for Indian stock market (NSE/BSE) traders
    - Quantity
 3. Prices update automatically from Finnhub
 4. View unrealized P&L in rupees and percentage
+
+**Bulk Import via CSV:**
+1. Click "Import CSV" button
+2. Upload a CSV file with columns: Symbol, Name, Quantity, Buy Price, Purchase Date
+3. Preview your data and click "Import"
+4. See sample file: `sample-portfolio.csv`
+5. Read the full guide: [CSV Import Guide](CSV_IMPORT_GUIDE.md)
 
 ### Viewing AI Insights
 
