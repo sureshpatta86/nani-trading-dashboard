@@ -33,7 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, Download, Upload, Wallet, Target, BarChart3, Calculator, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarDays } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, Download, Upload, Wallet, Target, BarChart3, Calculator, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarDays, Filter, X } from "lucide-react";
 import { CSVImportDialog } from "@/components/csv-import-dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -50,6 +50,7 @@ interface IntradayTrade {
   netProfitLoss: number;
   remarks?: string;
   followSetup: boolean;
+  mood: string;
 }
 
 export default function IntradayLogPage() {
@@ -66,6 +67,18 @@ export default function IntradayLogPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [tradesPerPage, setTradesPerPage] = useState(25);
 
+  // Column filters state
+  const [filters, setFilters] = useState({
+    script: "all",
+    type: "all",
+    mood: "all",
+    followSetup: "all",
+    dateFrom: "",
+    dateTo: "",
+    plType: "all", // profit, loss, or all
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
   const [formData, setFormData] = useState({
     tradeDate: new Date().toISOString().split("T")[0],
     script: "",
@@ -76,6 +89,7 @@ export default function IntradayLogPage() {
     charges: "",
     remarks: "",
     followSetup: true,
+    mood: "CALM",
   });
 
   useEffect(() => {
@@ -144,6 +158,7 @@ export default function IntradayLogPage() {
         netProfitLoss,
         remarks: formData.remarks || undefined,
         followSetup: formData.followSetup,
+        mood: formData.mood,
       };
 
       const url = editingId ? `/api/intraday/${editingId}` : "/api/intraday";
@@ -182,6 +197,7 @@ export default function IntradayLogPage() {
       charges: trade.charges.toString(),
       remarks: trade.remarks || "",
       followSetup: trade.followSetup,
+      mood: trade.mood || "CALM",
     });
     setEditingId(trade.id);
     setDialogOpen(true);
@@ -217,6 +233,7 @@ export default function IntradayLogPage() {
       charges: "",
       remarks: "",
       followSetup: true,
+      mood: "CALM",
     });
     setEditingId(null);
     setDialogOpen(false);
@@ -397,11 +414,81 @@ export default function IntradayLogPage() {
   // Calculate unique trading days
   const tradingDays = new Set(trades.map((t) => new Date(t.tradeDate).toDateString())).size;
 
-  // Pagination calculations
-  const totalPages = Math.ceil(trades.length / tradesPerPage);
+  // Filter trades based on filters
+  const filteredTrades = trades.filter((trade) => {
+    // Script filter
+    if (filters.script !== "all" && !trade.script.toLowerCase().includes(filters.script.toLowerCase())) {
+      return false;
+    }
+    // Type filter
+    if (filters.type !== "all" && trade.type !== filters.type) {
+      return false;
+    }
+    // Mood filter
+    if (filters.mood !== "all" && trade.mood !== filters.mood) {
+      return false;
+    }
+    // Follow Setup filter
+    if (filters.followSetup === "yes" && !trade.followSetup) {
+      return false;
+    }
+    if (filters.followSetup === "no" && trade.followSetup) {
+      return false;
+    }
+    // Date range filter
+    if (filters.dateFrom) {
+      const tradeDate = new Date(trade.tradeDate);
+      const fromDate = new Date(filters.dateFrom);
+      if (tradeDate < fromDate) return false;
+    }
+    if (filters.dateTo) {
+      const tradeDate = new Date(trade.tradeDate);
+      const toDate = new Date(filters.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      if (tradeDate > toDate) return false;
+    }
+    // P&L type filter
+    if (filters.plType === "profit" && trade.netProfitLoss <= 0) {
+      return false;
+    }
+    if (filters.plType === "loss" && trade.netProfitLoss >= 0) {
+      return false;
+    }
+    return true;
+  });
+
+  // Get unique scripts for filter dropdown
+  const uniqueScripts = [...new Set(trades.map((t) => t.script))].sort();
+
+  // Pagination calculations - use filteredTrades
+  const totalPages = Math.ceil(filteredTrades.length / tradesPerPage);
   const startIndex = (currentPage - 1) * tradesPerPage;
   const endIndex = startIndex + tradesPerPage;
-  const paginatedTrades = trades.slice(startIndex, endIndex);
+  const paginatedTrades = filteredTrades.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      script: "all",
+      type: "all",
+      mood: "all",
+      followSetup: "all",
+      dateFrom: "",
+      dateTo: "",
+      plType: "all",
+    });
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Object.entries(filters).some(([key, v]) => {
+    if (key === "dateFrom" || key === "dateTo") return v !== "";
+    return v !== "all";
+  });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -547,17 +634,39 @@ export default function IntradayLogPage() {
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="followSetup"
-                    checked={formData.followSetup}
-                    onChange={(e) => setFormData({ ...formData, followSetup: e.target.checked })}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <Label htmlFor="followSetup" className="cursor-pointer">
-                    Followed trading setup/rules?
-                  </Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="mood">Mood (Optional)</Label>
+                    <Select
+                      value={formData.mood}
+                      onValueChange={(value) => setFormData({ ...formData, mood: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select mood" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CALM">😌 Calm</SelectItem>
+                        <SelectItem value="ANXIOUS">😰 Anxious</SelectItem>
+                        <SelectItem value="CONFIDENT">😎 Confident</SelectItem>
+                        <SelectItem value="OVERCONFIDENT">🤩 Over Confident</SelectItem>
+                        <SelectItem value="FOMO">😱 FOMO</SelectItem>
+                        <SelectItem value="PANICKED">😨 Panicked</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-6">
+                    <input
+                      type="checkbox"
+                      id="followSetup"
+                      checked={formData.followSetup}
+                      onChange={(e) => setFormData({ ...formData, followSetup: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="followSetup" className="cursor-pointer">
+                      Followed trading setup/rules?
+                    </Label>
+                  </div>
                 </div>
 
                 {formData.buyPrice && formData.sellPrice && formData.quantity && (
@@ -731,10 +840,33 @@ export default function IntradayLogPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="text-lg">Recent Trades</CardTitle>
-              <CardDescription>Your intraday trading history</CardDescription>
+              <CardDescription>Your intraday trading history {hasActiveFilters && `(${filteredTrades.length} of ${trades.length} trades)`}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Show:</span>
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-8"
+              >
+                <Filter className="h-4 w-4 mr-1" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="ml-1 bg-primary-foreground text-primary rounded-full px-1.5 py-0.5 text-xs">
+                    {Object.entries(filters).filter(([key, v]) => {
+                      if (key === "dateFrom" || key === "dateTo") return v !== "";
+                      return v !== "all";
+                    }).length}
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                  <X className="h-4 w-4 mr-1" />
+                  Clear
+                </Button>
+              )}
+              <span className="text-sm text-muted-foreground ml-2">Show:</span>
               <Select value={tradesPerPage.toString()} onValueChange={handleTradesPerPageChange}>
                 <SelectTrigger className="w-20 h-8">
                   <SelectValue />
@@ -749,6 +881,133 @@ export default function IntradayLogPage() {
               <span className="text-sm text-muted-foreground">per page</span>
             </div>
           </div>
+
+          {/* Filter Row */}
+          {showFilters && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+              <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+                {/* Date Range */}
+                <div className="space-y-1">
+                  <Label className="text-xs">From Date</Label>
+                  <Input
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">To Date</Label>
+                  <Input
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                </div>
+
+                {/* Script Filter */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Script</Label>
+                  <Select value={filters.script} onValueChange={(v) => handleFilterChange("script", v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="All Scripts" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Scripts</SelectItem>
+                      {uniqueScripts.map((script) => (
+                        <SelectItem key={script} value={script}>
+                          {script}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Type Filter */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Type</Label>
+                  <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="BUY">Buy</SelectItem>
+                      <SelectItem value="SELL">Sell</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* P&L Filter */}
+                <div className="space-y-1">
+                  <Label className="text-xs">P&L</Label>
+                  <Select value={filters.plType} onValueChange={(v) => handleFilterChange("plType", v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="profit">Profit Only</SelectItem>
+                      <SelectItem value="loss">Loss Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Mood Filter */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Mood</Label>
+                  <Select value={filters.mood} onValueChange={(v) => handleFilterChange("mood", v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="All Moods" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Moods</SelectItem>
+                      <SelectItem value="CALM">😌 Calm</SelectItem>
+                      <SelectItem value="CONFIDENT">😎 Confident</SelectItem>
+                      <SelectItem value="OVERCONFIDENT">🤩 Over Confident</SelectItem>
+                      <SelectItem value="ANXIOUS">😰 Anxious</SelectItem>
+                      <SelectItem value="FOMO">😱 FOMO</SelectItem>
+                      <SelectItem value="PANICKED">😨 Panicked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Follow Setup Filter */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Setup</Label>
+                  <Select value={filters.followSetup} onValueChange={(v) => handleFilterChange("followSetup", v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="yes">Followed</SelectItem>
+                      <SelectItem value="no">Not Followed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Filter Summary */}
+              {hasActiveFilters && (
+                <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Showing <span className="font-medium text-foreground">{filteredTrades.length}</span> of{" "}
+                    <span className="font-medium text-foreground">{trades.length}</span> trades
+                    {filteredTrades.length > 0 && (
+                      <>
+                        {" • "}
+                        <span className={filteredTrades.reduce((sum, t) => sum + t.netProfitLoss, 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                          Net P&L: ₹{filteredTrades.reduce((sum, t) => sum + t.netProfitLoss, 0).toFixed(2)}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {trades.length === 0 ? (
@@ -775,6 +1034,7 @@ export default function IntradayLogPage() {
                       <TableHead className="text-right min-w-[100px]">Charges</TableHead>
                       <TableHead className="text-right min-w-[130px]">Net P&L</TableHead>
                       <TableHead className="text-center min-w-[80px]">Setup</TableHead>
+                      <TableHead className="text-center min-w-[100px]">Mood</TableHead>
                       <TableHead className="min-w-[200px]">Remarks</TableHead>
                       <TableHead className="text-right min-w-[100px]">Actions</TableHead>
                     </TableRow>
@@ -835,6 +1095,25 @@ export default function IntradayLogPage() {
                             </span>
                           )}
                         </TableCell>
+                        <TableCell className="text-center">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            trade.mood === "CALM" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                            trade.mood === "CONFIDENT" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
+                            trade.mood === "OVERCONFIDENT" ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" :
+                            trade.mood === "ANXIOUS" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                            trade.mood === "FOMO" ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" :
+                            trade.mood === "PANICKED" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                            "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                          }`}>
+                            {trade.mood === "CALM" && "😌"} 
+                            {trade.mood === "CONFIDENT" && "😎"} 
+                            {trade.mood === "OVERCONFIDENT" && "🤩"} 
+                            {trade.mood === "ANXIOUS" && "😰"} 
+                            {trade.mood === "FOMO" && "😱"} 
+                            {trade.mood === "PANICKED" && "😨"} 
+                            {" "}{trade.mood || "CALM"}
+                          </span>
+                        </TableCell>
                         <TableCell className="max-w-[200px] truncate" title={trade.remarks}>{trade.remarks}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -863,7 +1142,8 @@ export default function IntradayLogPage() {
               {/* Pagination Controls */}
               <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-4 border-t bg-muted/20">
                 <div className="text-sm text-muted-foreground">
-                  Showing {startIndex + 1} to {Math.min(endIndex, trades.length)} of {trades.length} trades
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredTrades.length)} of {filteredTrades.length} trades
+                  {hasActiveFilters && ` (filtered from ${trades.length})`}
                 </div>
                 <div className="flex items-center gap-1">
                   <Button

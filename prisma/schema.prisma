@@ -88,6 +88,7 @@ model IntradayTrade {
   profitLoss      Float    // P&L in rupees
   followSetup     Boolean  // Did trader follow the setup?
   remarks         String?  @db.Text
+mood          String   @default("CALM") // Trader's emotional state: CALM, ANXIOUS, CONFIDENT, OVERCONFIDENT, FOMO, PANICKED
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   

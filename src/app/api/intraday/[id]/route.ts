@@ -56,6 +56,7 @@ export async function PUT(
     if (body.netProfitLoss !== undefined) updateData.profitLoss = parseFloat(body.netProfitLoss);
     if (body.followSetup !== undefined) updateData.followSetup = Boolean(body.followSetup);
     if (body.remarks !== undefined) updateData.remarks = body.remarks || null;
+    if (body.mood !== undefined) updateData.mood = body.mood;
 
     const updatedTrade = await prisma.intradayTrade.update({
       where: { id: tradeId },
@@ -76,6 +77,7 @@ export async function PUT(
       netProfitLoss: updatedTrade.profitLoss,
       followSetup: updatedTrade.followSetup,
       remarks: updatedTrade.remarks,
+      mood: updatedTrade.mood,
     });
   } catch (error) {
     console.error("Error updating intraday trade:", error);

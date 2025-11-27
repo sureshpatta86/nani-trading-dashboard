@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
       netProfitLoss: trade.profitLoss,
       followSetup: trade.followSetup,
       remarks: trade.remarks,
+      mood: trade.mood,
     }));
 
     return NextResponse.json(transformedTrades);
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
     const netProfitLoss = body.netProfitLoss || profitLoss;
     const followSetup = body.followSetup ?? true;
     const remarks = body.remarks;
+    const mood = body.mood || 'CALM';
 
     // Validation
     if (!tradeDate || !script || !type || !quantity || !buyPrice || !sellPrice) {
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
         profitLoss: parseFloat(netProfitLoss),
         followSetup: Boolean(followSetup),
         remarks: remarks || null,
+        mood: mood,
       },
     });
 
@@ -124,6 +127,7 @@ export async function POST(request: NextRequest) {
       netProfitLoss: trade.profitLoss,
       followSetup: trade.followSetup,
       remarks: trade.remarks,
+      mood: trade.mood,
     }, { status: 201 });
   } catch (error) {
     console.error("Error creating intraday trade:", error);
@@ -189,6 +193,7 @@ export async function PUT(request: NextRequest) {
         profitLoss: body.profitLoss ? parseFloat(body.profitLoss) : undefined,
         followSetup: body.followSetup !== undefined ? body.followSetup : undefined,
         remarks: body.remarks !== undefined ? body.remarks : undefined,
+        mood: body.mood !== undefined ? body.mood : undefined,
       },
     });
 
