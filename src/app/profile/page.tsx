@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Lock, Save, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { User, Lock, Save, Loader2, CheckCircle2, AlertCircle, Wallet, Shield } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
+    initialCapital: "0",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -31,12 +32,26 @@ export default function ProfilePage() {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     } else if (status === "authenticated" && session?.user) {
-      setProfileData({
-        name: session.user.name || "",
-        email: session.user.email || "",
-      });
+      // Fetch user profile data including initial capital
+      fetchUserProfile();
     }
   }, [status, session, router]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch("/api/profile");
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData({
+          name: data.name || "",
+          email: data.email || "",
+          initialCapital: data.initialCapital?.toString() || "0",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +64,7 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: profileData.name,
+          initialCapital: parseFloat(profileData.initialCapital) || 0,
         }),
       });
 
@@ -116,8 +132,14 @@ export default function ProfilePage() {
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading profile...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -126,44 +148,47 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">Profile Settings</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your account details and security settings
-          </p>
-        </div>
-
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-              message.type === "success"
-                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-            }`}
-          >
-            {message.type === "success" ? (
-              <CheckCircle2 className="h-5 w-5" />
-            ) : (
-              <AlertCircle className="h-5 w-5" />
-            )}
-            <span>{message.text}</span>
+      <main className="w-[90%] max-w-[1620px] mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your account details and security settings
+            </p>
           </div>
-        )}
 
-        <div className="space-y-6">
-          {/* Profile Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+          {message && (
+            <div
+              className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+                message.type === "success"
+                  ? "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20"
+                  : "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20"
+              }`}
+            >
+              {message.type === "success" ? (
+                <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              )}
+              <span>{message.text}</span>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            {/* Profile Information */}
+            <Card className="overflow-hidden border-0 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-blue-600/10 to-purple-600/10">
+              <CardTitle className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <User className="h-5 w-5 text-white" />
+                </div>
                 Profile Information
               </CardTitle>
               <CardDescription>
                 Update your account details
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
@@ -173,6 +198,7 @@ export default function ProfilePage() {
                     placeholder="John Doe"
                     value={profileData.name}
                     onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="h-11"
                   />
                 </div>
 
@@ -183,14 +209,38 @@ export default function ProfilePage() {
                     type="email"
                     value={profileData.email}
                     disabled
-                    className="bg-muted cursor-not-allowed"
+                    className="h-11 bg-muted cursor-not-allowed"
                   />
                   <p className="text-xs text-muted-foreground">
                     Email cannot be changed
                   </p>
                 </div>
 
-                <Button type="submit" disabled={isLoading}>
+                <div className="space-y-2">
+                  <Label htmlFor="initialCapital" className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                    Initial Trading Capital (₹)
+                  </Label>
+                  <Input
+                    id="initialCapital"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="100000"
+                    value={profileData.initialCapital}
+                    onChange={(e) => setProfileData({ ...profileData, initialCapital: e.target.value })}
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your starting capital for intraday trading
+                  </p>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -204,17 +254,19 @@ export default function ProfilePage() {
 
           {/* Change Password */}
           {session?.user?.email && !session?.user?.image && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="h-5 w-5" />
+            <Card className="overflow-hidden border-0 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-amber-600/10 to-orange-600/10">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center">
+                    <Lock className="h-5 w-5 text-white" />
+                  </div>
                   Change Password
                 </CardTitle>
                 <CardDescription>
                   Update your password to keep your account secure
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Current Password</Label>
@@ -227,6 +279,7 @@ export default function ProfilePage() {
                         setPasswordData({ ...passwordData, currentPassword: e.target.value })
                       }
                       required
+                      className="h-11"
                     />
                   </div>
 
@@ -242,6 +295,7 @@ export default function ProfilePage() {
                       }
                       required
                       minLength={6}
+                      className="h-11"
                     />
                     <p className="text-xs text-muted-foreground">
                       Must be at least 6 characters
@@ -260,10 +314,15 @@ export default function ProfilePage() {
                       }
                       required
                       minLength={6}
+                      className="h-11"
                     />
                   </div>
 
-                  <Button type="submit" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                  >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
@@ -277,20 +336,21 @@ export default function ProfilePage() {
           )}
 
           {session?.user?.image && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="h-5 w-5" />
+            <Card className="overflow-hidden border-0 shadow-lg">
+              <CardHeader className="bg-muted/30">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <Shield className="h-5 w-5 text-muted-foreground" />
                   Password
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">
                   You signed in with Google OAuth. Password management is not available for OAuth accounts.
                 </p>
               </CardContent>
             </Card>
           )}
+          </div>
         </div>
       </main>
     </div>

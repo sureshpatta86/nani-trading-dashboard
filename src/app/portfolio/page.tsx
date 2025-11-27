@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -16,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, RefreshCw, Download, Upload } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, RefreshCw, Download, Upload, Briefcase, PieChart, Wallet, BarChart3, Loader2 } from "lucide-react";
 import { CSVImportDialog } from "@/components/csv-import-dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +53,7 @@ export default function PortfolioPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     symbol: "",
@@ -78,17 +88,29 @@ export default function PortfolioPage() {
   const refreshPrices = async () => {
     setIsRefreshing(true);
     try {
-      const response = await fetch("/api/portfolio/refresh-prices", {
-        method: "POST",
-      });
+      const response = await fetch("/api/portfolio?updatePrices=true");
       if (response.ok) {
-        await fetchPortfolio();
+        const data = await response.json();
+        setStocks(data);
+        toast({
+          title: "Prices Updated",
+          description: "Stock prices have been refreshed successfully.",
+        });
       } else {
-        alert("Failed to refresh prices");
+        const error = await response.json();
+        toast({
+          title: "Failed to Refresh Prices",
+          description: error.error || "Unable to fetch stock prices. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to refresh prices:", error);
-      alert("Failed to refresh prices");
+      toast({
+        title: "Error",
+        description: "Failed to refresh prices. Check console for details.",
+        variant: "destructive",
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -107,7 +129,7 @@ export default function PortfolioPage() {
         purchaseDate: new Date(formData.purchaseDate).toISOString(),
       };
 
-      const url = editingId ? `/api/portfolio/${editingId}` : "/api/portfolio";
+      const url = editingId ? `/api/portfolio?id=${editingId}` : "/api/portfolio";
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -119,6 +141,7 @@ export default function PortfolioPage() {
       if (response.ok) {
         await fetchPortfolio();
         resetForm();
+        setDialogOpen(false);
       } else {
         const error = await response.json();
         alert(error.error || "Failed to save stock");
@@ -140,13 +163,14 @@ export default function PortfolioPage() {
       purchaseDate: new Date(stock.purchaseDate).toISOString().split("T")[0],
     });
     setEditingId(stock.id);
+    setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to remove this stock from your portfolio?")) return;
 
     try {
-      const response = await fetch(`/api/portfolio/${id}`, {
+      const response = await fetch(`/api/portfolio?id=${id}`, {
         method: "DELETE",
       });
 
@@ -170,6 +194,7 @@ export default function PortfolioPage() {
       purchaseDate: new Date().toISOString().split("T")[0],
     });
     setEditingId(null);
+    setDialogOpen(false);
   };
 
   const exportToCSV = () => {
@@ -214,8 +239,7 @@ export default function PortfolioPage() {
         const dateStr = row["Purchase Date"]?.trim();
         
         if (!dateStr) {
-          errors.push(`Row ${i + 1}: Missing purchase date`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Missing purchase date` };
         }
 
         // Try to parse the date
@@ -232,8 +256,7 @@ export default function PortfolioPage() {
         }
 
         if (isNaN(purchaseDate.getTime())) {
-          errors.push(`Row ${i + 1}: Invalid date format "${dateStr}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid date format "${dateStr}"` };
         }
 
         const symbol = row.Symbol?.trim().toUpperCase();
@@ -243,18 +266,15 @@ export default function PortfolioPage() {
 
         // Validation
         if (!symbol) {
-          errors.push(`Row ${i + 1}: Missing symbol`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Missing symbol` };
         }
 
         if (isNaN(quantity) || quantity <= 0) {
-          errors.push(`Row ${i + 1}: Invalid quantity "${row.Quantity}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid quantity "${row.Quantity}"` };
         }
 
         if (isNaN(buyPrice) || buyPrice <= 0) {
-          errors.push(`Row ${i + 1}: Invalid buy price "${row["Buy Price"]}"`);
-          continue;
+          return { success: false, error: `Row ${i + 1}: Invalid buy price "${row["Buy Price"]}"` };
         }
 
         // Check if stock already exists
@@ -310,8 +330,14 @@ export default function PortfolioPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading portfolio...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -327,13 +353,118 @@ export default function PortfolioPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Portfolio Management</h1>
-          <p className="text-muted-foreground">Track your long-term investments</p>
-        </div>
-        <div className="flex gap-2">
+      <div className="w-[90%] max-w-[1620px] mx-auto px-4 py-8 space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Portfolio Management</h1>
+            <p className="text-muted-foreground mt-1">Track your long-term investments</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  resetForm();
+                  setEditingId(null);
+                }} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Stock
+                </Button>
+              </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingId ? "Edit Stock" : "Add New Stock"}</DialogTitle>
+                <DialogDescription>
+                  Enter your portfolio stock details
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">Stock Symbol *</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g., RELIANCE.NS, TCS.NS"
+                      value={formData.symbol}
+                      onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Add .NS for NSE or .BO for BSE (e.g., RELIANCE.NS)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Stock Name (Optional)</Label>
+                    <Input
+                      id="name"
+                      placeholder="e.g., Reliance Industries"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity *</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      placeholder="100"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="buyPrice">Buy Price *</Label>
+                    <Input
+                      id="buyPrice"
+                      type="number"
+                      step="0.01"
+                      placeholder="2500.00"
+                      value={formData.buyPrice}
+                      onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="purchaseDate">Purchase Date *</Label>
+                    <Input
+                      id="purchaseDate"
+                      type="date"
+                      value={formData.purchaseDate}
+                      onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {formData.quantity && formData.buyPrice && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Total Investment:</span>
+                      <span className="font-bold">
+                        ₹{(parseFloat(formData.quantity) * parseFloat(formData.buyPrice)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : editingId ? "Update Stock" : "Add Stock"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
           <Button
             onClick={refreshPrices}
             variant="outline"
@@ -373,161 +504,76 @@ TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
       />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-indigo-500/10 via-card to-card">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Stocks</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Stocks</CardTitle>
+            <Briefcase className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stocks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {gainers} gainers / {losers} losers
+            <p className="text-xs text-muted-foreground mt-1">
+              <span className="text-green-600 dark:text-green-400">{gainers} gainers</span> / <span className="text-red-600 dark:text-red-400">{losers} losers</span>
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Invested Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Invested Value</CardTitle>
+            <Wallet className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{totalInvested.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{totalInvested.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total investment</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-500/10 via-card to-card">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Current Value</CardTitle>
+            <PieChart className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{totalCurrent.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₹{totalCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+            <p className="text-xs text-muted-foreground mt-1">Market value</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/10 via-card to-card">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total P&L</CardTitle>
+            {totalPL >= 0 ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totalPL >= 0 ? "text-green-600" : "text-red-600"}`}>
-              ₹{totalPL.toFixed(2)}
+            <div className={`text-2xl font-bold ${totalPL >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+              ₹{totalPL.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
             </div>
-            <p className={`text-xs ${totalPLPercentage >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {totalPLPercentage >= 0 ? "+" : ""}
-              {totalPLPercentage.toFixed(2)}%
+            <p className={`text-xs mt-1 ${totalPLPercentage >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+              {totalPLPercentage >= 0 ? "+" : ""}{totalPLPercentage.toFixed(2)}%
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Stock Entry Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? "Edit Stock" : "Add New Stock"}</CardTitle>
-          <CardDescription>Enter your portfolio stock details</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="symbol">Stock Symbol *</Label>
-                <Input
-                  id="symbol"
-                  placeholder="e.g., RELIANCE.NS, TCS.NS"
-                  value={formData.symbol}
-                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Add .NS for NSE or .BO for BSE (e.g., RELIANCE.NS)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="name">Stock Name (Optional)</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g., Reliance Industries"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity *</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  placeholder="100"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="buyPrice">Buy Price *</Label>
-                <Input
-                  id="buyPrice"
-                  type="number"
-                  step="0.01"
-                  placeholder="2500.00"
-                  value={formData.buyPrice}
-                  onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="purchaseDate">Purchase Date *</Label>
-                <Input
-                  id="purchaseDate"
-                  type="date"
-                  value={formData.purchaseDate}
-                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            {formData.quantity && formData.buyPrice && (
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Total Investment:</span>
-                  <span className="font-bold">
-                    ₹{(parseFloat(formData.quantity) * parseFloat(formData.buyPrice)).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button type="submit" disabled={isSubmitting}>
-                <Plus className="mr-2 h-4 w-4" />
-                {isSubmitting ? "Saving..." : editingId ? "Update Stock" : "Add Stock"}
-              </Button>
-              {editingId && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
       {/* Portfolio Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Portfolio</CardTitle>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg">Your Portfolio</CardTitle>
           <CardDescription>Current holdings and performance</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {stocks.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No stocks in your portfolio yet. Add your first stock above!</p>
+            <div className="text-center py-16 px-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Briefcase className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">No stocks in portfolio</h3>
+              <p className="text-muted-foreground mb-4">Click &quot;Add Stock&quot; button above to get started!</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

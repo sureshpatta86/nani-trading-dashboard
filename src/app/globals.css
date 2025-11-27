@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -23,48 +23,302 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 221.2 83.2% 53.3%;
+    --gradient-end: 262 83.3% 57.8%;
+    
+    /* Success/Error colors */
+    --success: 142 76% 36%;
+    --success-foreground: 355 100% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 5%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 224 71% 6%;
+    --card-foreground: 213 31% 91%;
+    --popover: 224 71% 6%;
+    --popover-foreground: 213 31% 91%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 222.2 47.4% 11.2%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+    --accent: 216 34% 17%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
     --ring: 224.3 76.3% 48%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 217.2 91.2% 59.8%;
+    --gradient-end: 262 83.3% 67.8%;
+    
+    /* Success/Error colors */
+    --success: 142 70% 45%;
+    --success-foreground: 144 100% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 5%;
+  }
+
+  .dark2 {
+    --background: 0 0% 12%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 22%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 217.2 91.2% 59.8%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 217.2 91.2% 59.8%;
+    --gradient-end: 262 83.3% 67.8%;
+    
+    /* Success/Error colors */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 5%;
+  }
+
+  .blue {
+    --background: 210 100% 6%;
+    --foreground: 199 89% 95%;
+    --card: 210 100% 8%;
+    --card-foreground: 199 89% 95%;
+    --popover: 210 100% 8%;
+    --popover-foreground: 199 89% 95%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 210 100% 6%;
+    --secondary: 217 91% 20%;
+    --secondary-foreground: 199 89% 95%;
+    --muted: 217 91% 15%;
+    --muted-foreground: 199 40% 60%;
+    --accent: 226 70% 25%;
+    --accent-foreground: 199 89% 95%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 91% 18%;
+    --input: 217 91% 18%;
+    --ring: 199 89% 48%;
+    --chart-1: 199 89% 48%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 226 83% 55%;
+    --chart-4: 190 90% 50%;
+    --chart-5: 210 100% 60%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 199 89% 48%;
+    --gradient-end: 226 83% 59%;
+    
+    /* Success/Error colors */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 5%;
+  }
+
+  .golden {
+    --background: 45 100% 98%;
+    --foreground: 30 80% 10%;
+    --card: 45 80% 96%;
+    --card-foreground: 30 80% 10%;
+    --popover: 45 80% 96%;
+    --popover-foreground: 30 80% 10%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 45 100% 98%;
+    --secondary: 45 60% 90%;
+    --secondary-foreground: 30 80% 15%;
+    --muted: 45 50% 92%;
+    --muted-foreground: 30 30% 40%;
+    --accent: 32 95% 55%;
+    --accent-foreground: 45 100% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 45 100% 98%;
+    --border: 40 50% 85%;
+    --input: 40 50% 85%;
+    --ring: 38 92% 50%;
+    --chart-1: 38 92% 50%;
+    --chart-2: 32 95% 55%;
+    --chart-3: 25 95% 53%;
+    --chart-4: 45 93% 47%;
+    --chart-5: 48 96% 53%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 38 92% 50%;
+    --gradient-end: 25 95% 53%;
+    
+    /* Success/Error colors */
+    --success: 142 76% 36%;
+    --success-foreground: 45 100% 98%;
+    --warning: 32 95% 55%;
+    --warning-foreground: 30 80% 10%;
   }
 }
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+@layer utilities {
+  .gradient-primary {
+    @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .glass {
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl;
+  }
+  
+  .glass-card {
+    @apply bg-white/60 dark:bg-gray-900/60 backdrop-blur-lg border border-white/20 dark:border-gray-700/50;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+  
+  .stats-card {
+    @apply relative overflow-hidden;
+  }
+  
+  .stats-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300;
+  }
+  
+  .stats-card:hover::before {
+    @apply opacity-100;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.dark ::-webkit-scrollbar-thumb,
+.dark2 ::-webkit-scrollbar-thumb,
+.blue ::-webkit-scrollbar-thumb {
+  @apply bg-gray-700;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+.dark2 ::-webkit-scrollbar-thumb:hover,
+.blue ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
+/* Thin scrollbar for tables */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-muted/30 rounded-full;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb,
+.dark2 .scrollbar-thin::-webkit-scrollbar-thumb,
+.blue .scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-gray-600;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.dark2 .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.blue .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
 }

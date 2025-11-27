@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     const transformedStocks = stocks.map(stock => ({
       id: stock.id,
       symbol: stock.stockName,
-      name: undefined, // Not stored in current schema
+      name: stock.displayName || undefined,
       quantity: stock.quantity,
       buyPrice: stock.averagePrice,
       currentPrice: stock.currentPrice || 0,
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       currentValue: (stock.currentPrice || 0) * stock.quantity,
       profitLoss: stock.profitLoss || 0,
       profitLossPercentage: stock.profitLossPercent || 0,
-      purchaseDate: stock.createdAt,
+      purchaseDate: stock.purchaseDate || stock.createdAt,
     }));
 
     return NextResponse.json(transformedStocks);
@@ -103,8 +103,10 @@ export async function POST(request: NextRequest) {
     
     // Support both field names for flexibility
     const stockName = (body.symbol || body.stockName)?.toUpperCase();
+    const displayName = body.name || body.displayName || null;
     const averagePrice = body.buyPrice || body.averagePrice;
     const quantity = body.quantity;
+    const purchaseDate = body.purchaseDate ? new Date(body.purchaseDate) : new Date();
 
     // Validation
     if (!stockName || !averagePrice || !quantity) {
@@ -145,11 +147,13 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         stockName: stockName,
+        displayName: displayName,
         averagePrice: parseFloat(averagePrice),
         quantity: parseInt(quantity),
         currentPrice,
         profitLoss,
         profitLossPercent,
+        purchaseDate,
         lastPriceUpdate: currentPrice ? new Date() : null,
       },
     });
@@ -158,7 +162,7 @@ export async function POST(request: NextRequest) {
     const transformedStock = {
       id: stock.id,
       symbol: stock.stockName,
-      name: undefined,
+      name: stock.displayName || undefined,
       quantity: stock.quantity,
       buyPrice: stock.averagePrice,
       currentPrice: stock.currentPrice || 0,
@@ -166,7 +170,7 @@ export async function POST(request: NextRequest) {
       currentValue: (stock.currentPrice || 0) * stock.quantity,
       profitLoss: stock.profitLoss || 0,
       profitLossPercentage: stock.profitLossPercent || 0,
-      purchaseDate: stock.createdAt,
+      purchaseDate: stock.purchaseDate,
     };
 
     return NextResponse.json(transformedStock, { status: 201 });
@@ -220,19 +224,35 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updateData: Record<string, number | null> = {};
+    // Support both field names for flexibility
+    const stockName = body.symbol || body.stockName;
+    const displayName = body.name !== undefined ? body.name : (body.displayName !== undefined ? body.displayName : undefined);
+    const averagePrice = body.buyPrice !== undefined ? parseFloat(body.buyPrice) : (body.averagePrice !== undefined ? parseFloat(body.averagePrice) : undefined);
+    const quantity = body.quantity !== undefined ? parseInt(body.quantity) : undefined;
+    const purchaseDate = body.purchaseDate ? new Date(body.purchaseDate) : undefined;
+
+    const updateData: Record<string, any> = {};
     
-    if (body.averagePrice !== undefined) {
-      updateData.averagePrice = parseFloat(body.averagePrice);
+    if (stockName !== undefined && stockName !== existingStock.stockName) {
+      updateData.stockName = stockName.toUpperCase();
     }
-    if (body.quantity !== undefined) {
-      updateData.quantity = parseInt(body.quantity);
+    if (displayName !== undefined) {
+      updateData.displayName = displayName || null;
+    }
+    if (averagePrice !== undefined) {
+      updateData.averagePrice = averagePrice;
+    }
+    if (quantity !== undefined) {
+      updateData.quantity = quantity;
+    }
+    if (purchaseDate !== undefined) {
+      updateData.purchaseDate = purchaseDate;
     }
 
     // Recalculate P&L if price or quantity changed
-    if (updateData.averagePrice || updateData.quantity) {
-      const avgPrice = updateData.averagePrice || existingStock.averagePrice;
-      const qty = updateData.quantity || existingStock.quantity;
+    if (updateData.averagePrice !== undefined || updateData.quantity !== undefined) {
+      const avgPrice = updateData.averagePrice !== undefined ? updateData.averagePrice : existingStock.averagePrice;
+      const qty = updateData.quantity !== undefined ? updateData.quantity : existingStock.quantity;
       const currentPrice = existingStock.currentPrice;
 
       if (currentPrice) {
@@ -246,7 +266,43 @@ export async function PUT(request: NextRequest) {
       data: updateData,
     });
 
-    return NextResponse.json(updatedStock);
+    // Fetch latest price if stock symbol changed or if we want fresh data
+    let finalStock = updatedStock;
+    if (updateData.stockName || updateData.averagePrice !== undefined || updateData.quantity !== undefined) {
+      const priceData = await fetchStockPrice(finalStock.stockName);
+      
+      if (priceData) {
+        const profitLoss = (priceData.price - finalStock.averagePrice) * finalStock.quantity;
+        const profitLossPercent = ((priceData.price - finalStock.averagePrice) / finalStock.averagePrice) * 100;
+        
+        finalStock = await prisma.portfolioStock.update({
+          where: { id: stockId },
+          data: {
+            currentPrice: priceData.price,
+            profitLoss,
+            profitLossPercent,
+            lastPriceUpdate: new Date(),
+          },
+        });
+      }
+    }
+
+    // Transform to match frontend expectations
+    const transformedStock = {
+      id: finalStock.id,
+      symbol: finalStock.stockName,
+      name: finalStock.displayName || undefined,
+      quantity: finalStock.quantity,
+      buyPrice: finalStock.averagePrice,
+      currentPrice: finalStock.currentPrice || 0,
+      investedValue: finalStock.averagePrice * finalStock.quantity,
+      currentValue: (finalStock.currentPrice || 0) * finalStock.quantity,
+      profitLoss: finalStock.profitLoss || 0,
+      profitLossPercentage: finalStock.profitLossPercent || 0,
+      purchaseDate: finalStock.purchaseDate || finalStock.createdAt,
+    };
+
+    return NextResponse.json(transformedStock);
   } catch (error) {
     console.error("Error updating portfolio stock:", error);
     return NextResponse.json(

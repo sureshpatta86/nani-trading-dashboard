@@ -1,16 +1,22 @@
 /**
- * Finnhub API client for fetching Indian stock prices
+ * Yahoo Finance API client for fetching Indian stock prices (Free, No API key required)
  */
 
-interface FinnhubQuote {
-  c: number; // Current price
-  d: number; // Change
-  dp: number; // Percent change
-  h: number; // High price of the day
-  l: number; // Low price of the day
-  o: number; // Open price of the day
-  pc: number; // Previous close price
-  t: number; // Timestamp
+interface YahooQuoteResponse {
+  chart: {
+    result: Array<{
+      meta: {
+        regularMarketPrice: number;
+        previousClose: number;
+        regularMarketOpen: number;
+        regularMarketDayHigh: number;
+        regularMarketDayLow: number;
+        regularMarketTime: number;
+        symbol: string;
+      };
+    }>;
+    error: null | { code: string; description: string };
+  };
 }
 
 export interface StockPrice {
@@ -26,53 +32,63 @@ export interface StockPrice {
 }
 
 /**
- * Fetch stock price from Finnhub API
+ * Fetch stock price from Yahoo Finance API (FREE - No API key required!)
  * @param symbol Stock symbol (e.g., "RELIANCE.NS" for NSE, "RELIANCE.BO" for BSE)
  */
 export async function fetchStockPrice(symbol: string): Promise<StockPrice | null> {
-  const apiKey = process.env.FINNHUB_API_KEY;
-  
-  if (!apiKey) {
-    console.error('FINNHUB_API_KEY not found in environment variables');
-    return null;
-  }
-
   try {
-    // Normalize symbol format for Finnhub
+    // Normalize symbol format for Yahoo Finance
     // Add .NS for NSE if no exchange suffix present
-    let normalizedSymbol = symbol;
-    if (!symbol.includes('.NS') && !symbol.includes('.BO')) {
-      normalizedSymbol = `${symbol}.NS`;
+    let normalizedSymbol = symbol.toUpperCase();
+    if (!normalizedSymbol.includes('.NS') && !normalizedSymbol.includes('.BO')) {
+      normalizedSymbol = `${normalizedSymbol}.NS`;
     }
 
-    const url = `https://finnhub.io/api/v1/quote?symbol=${normalizedSymbol}&token=${apiKey}`;
+    // Yahoo Finance API endpoint (free, no API key required)
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${normalizedSymbol}`;
+    
     const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+      },
       next: { revalidate: 300 } // Cache for 5 minutes
     });
 
     if (!response.ok) {
-      console.error(`Finnhub API error: ${response.status} ${response.statusText}`);
+      console.error(`Yahoo Finance API error: ${response.status} ${response.statusText}`);
       return null;
     }
 
-    const data: FinnhubQuote = await response.json();
+    const data: YahooQuoteResponse = await response.json();
 
-    // Check if data is valid (Finnhub returns 0 for all values if symbol not found)
-    if (data.c === 0 && data.pc === 0) {
+    // Check if there's an error in the response
+    if (data.chart.error) {
+      console.warn(`Yahoo Finance error for ${normalizedSymbol}:`, data.chart.error.description);
+      return null;
+    }
+
+    const result = data.chart.result?.[0];
+    if (!result || !result.meta) {
       console.warn(`No data found for symbol: ${normalizedSymbol}`);
       return null;
     }
 
+    const meta = result.meta;
+    const currentPrice = meta.regularMarketPrice;
+    const previousClose = meta.previousClose;
+    const change = currentPrice - previousClose;
+    const changePercent = (change / previousClose) * 100;
+
     return {
       symbol: normalizedSymbol,
-      price: data.c,
-      change: data.d,
-      changePercent: data.dp,
-      high: data.h,
-      low: data.l,
-      open: data.o,
-      previousClose: data.pc,
-      timestamp: data.t * 1000, // Convert to milliseconds
+      price: currentPrice,
+      change: change,
+      changePercent: changePercent,
+      high: meta.regularMarketDayHigh,
+      low: meta.regularMarketDayLow,
+      open: meta.regularMarketOpen,
+      previousClose: previousClose,
+      timestamp: meta.regularMarketTime * 1000, // Convert to milliseconds
     };
   } catch (error) {
     console.error(`Error fetching stock price for ${symbol}:`, error);

@@ -11,7 +11,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name } = body;
+    const { name, initialCapital } = body;
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
@@ -20,9 +20,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const updateData: any = {
+      name: name.trim(),
+    };
+
+    if (initialCapital !== undefined) {
+      updateData.initialCapital = parseFloat(initialCapital) || 0;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
-      data: { name: name.trim() },
+      data: updateData,
     });
 
     return NextResponse.json({

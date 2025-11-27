@@ -18,6 +18,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?   // For email/password authentication
+  initialCapital Float    @default(0) // Initial trading capital
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -99,13 +100,15 @@ model IntradayTrade {
 model PortfolioStock {
   id              String   @id @default(cuid())
   userId          String
-  stockName       String   // Stock name/ticker (e.g., RELIANCE, TCS)
+  stockName       String   // Stock symbol/ticker (e.g., RELIANCE.NS, TCS.NS)
+  displayName     String?  // Human-readable stock name (e.g., Reliance Industries)
   averagePrice    Float    // Average purchase price
   quantity        Int
   currentPrice    Float?   // Auto-fetched current price
   profitLoss      Float?   // Unrealized P&L in rupees
   profitLossPercent Float? // Unrealized P&L percentage
   lastPriceUpdate DateTime? // When price was last fetched
+  purchaseDate    DateTime @default(now()) // Actual purchase date
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   

@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 // PUT /api/intraday/[id] - Update an existing intraday trade
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,7 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const tradeId = params.id;
+    const { id: tradeId } = await params;
     const body = await request.json();
 
     // Verify trade belongs to user
@@ -89,7 +89,7 @@ export async function PUT(
 // DELETE /api/intraday/[id] - Delete an intraday trade
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -106,7 +106,7 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const tradeId = params.id;
+    const { id: tradeId } = await params;
 
     // Verify trade belongs to user
     const existingTrade = await prisma.intradayTrade.findFirst({

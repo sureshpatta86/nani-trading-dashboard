@@ -10,12 +10,16 @@ import { formatINR, getPLColor, calculateWinRate, calculateProfitFactor } from "
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Wallet,
   Target,
   Award,
   AlertTriangle,
   RefreshCw,
   Loader2,
+  ArrowUpRight,
+  ArrowDownRight,
+  BarChart3,
+  PieChart,
 } from "lucide-react";
 
 interface IntradayTrade {
@@ -86,8 +90,12 @@ export default function DashboardPage() {
         fetch("/api/portfolio?updatePrices=false"),
       ]);
 
-      const trades: IntradayTrade[] = await tradesRes.json();
-      const portfolio: PortfolioStock[] = await portfolioRes.json();
+      const tradesData = await tradesRes.json();
+      const portfolioData = await portfolioRes.json();
+
+      // Handle API errors - check if response is an error object
+      const trades: IntradayTrade[] = Array.isArray(tradesData) ? tradesData : [];
+      const portfolio: PortfolioStock[] = Array.isArray(portfolioData) ? portfolioData : [];
 
       // Calculate stats
       const totalPL = trades.reduce((sum, t) => sum + t.profitLoss, 0);
@@ -161,8 +169,14 @@ export default function DashboardPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse" />
+            <Loader2 className="h-12 w-12 animate-spin text-primary relative" />
+          </div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -171,105 +185,126 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8">
-        {/* Welcome Message */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-lg border border-primary/20">
-          <h2 className="text-2xl font-bold mb-2">
-            Welcome back, {session?.user?.name || "Trader"}! 👋
-          </h2>
-          <p className="text-muted-foreground">
-            Track your trades, analyze performance, and get AI-powered insights to improve your trading strategy.
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Trading Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
-              Track your performance and get AI-powered insights
-            </p>
+      <main className="w-[90%] max-w-[1620px] mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white shadow-xl">
+          <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] bg-[length:24px_24px]" />
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">
+                  Welcome back, {session?.user?.name || "Trader"}! 👋
+                </h2>
+                <p className="text-blue-100 max-w-xl">
+                  Track your trades, analyze performance, and get AI-powered insights to improve your trading strategy.
+                </p>
+              </div>
+              <Button 
+                onClick={refreshPrices} 
+                disabled={refreshing}
+                variant="secondary"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+              >
+                {refreshing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Refresh Prices
+              </Button>
+            </div>
           </div>
-          <Button onClick={refreshPrices} disabled={refreshing}>
-            {refreshing ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Refresh Prices
-          </Button>
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/10 via-card to-card">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total P&L</CardTitle>
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${getPLColor(stats.totalPL)}`}>
                 {formatINR(stats.totalPL)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <BarChart3 className="h-3 w-3" />
                 {stats.totalTrades} total trades
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate</CardTitle>
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {stats.winRate.toFixed(1)}%
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.winningTrades} wins / {stats.losingTrades} losses
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <span className="text-green-600 dark:text-green-400">{stats.winningTrades}W</span>
+                <span>/</span>
+                <span className="text-red-600 dark:text-red-400">{stats.losingTrades}L</span>
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-amber-500/10 via-card to-card">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Profit Factor</CardTitle>
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <Award className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                 {stats.profitFactor === Infinity
                   ? "∞"
                   : stats.profitFactor.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.profitFactor > 2 ? "Excellent" : stats.profitFactor > 1 ? "Good" : "Needs work"}
+                {stats.profitFactor > 2 ? "🔥 Excellent" : stats.profitFactor > 1 ? "✓ Good" : "⚠️ Needs work"}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-500/10 via-card to-card">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Setup Adherence</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Setup Adherence</CardTitle>
+              <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <PieChart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {stats.setupAdherence.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Following your trading plan
+                Following your plan
               </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Best & Worst Trades + Portfolio */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="group relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-500" />
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
                 Best Trade
               </CardTitle>
             </CardHeader>
@@ -283,10 +318,13 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingDown className="h-5 w-5 text-red-500" />
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                  <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                </div>
                 Worst Trade
               </CardTitle>
             </CardHeader>
@@ -300,21 +338,28 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group relative overflow-hidden bg-gradient-to-br from-primary/5 via-card to-card">
             <CardHeader>
-              <CardTitle>Portfolio Overview</CardTitle>
+              <CardTitle className="text-lg">Portfolio Overview</CardTitle>
+              <CardDescription>Your long-term investments</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">Total Value</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xl font-bold">
                     {formatINR(stats.portfolioValue)}
                   </p>
                 </div>
-                <div>
+                <div className="h-px bg-border" />
+                <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">Unrealized P&L</p>
-                  <p className={`text-xl font-bold ${getPLColor(stats.portfolioPL)}`}>
+                  <p className={`text-xl font-bold flex items-center gap-1 ${getPLColor(stats.portfolioPL)}`}>
+                    {stats.portfolioPL >= 0 ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )}
                     {formatINR(stats.portfolioPL)}
                   </p>
                 </div>
@@ -322,26 +367,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* AI Insights Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle>AI Trading Insights</CardTitle>
-            <CardDescription>
-              AI-powered analysis of your trading patterns (Coming soon)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="mb-4">
-                AI insights will analyze your trading patterns and provide actionable recommendations
-              </p>
-              <Button variant="outline" disabled>
-                Generate Insights (Coming Soon)
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
