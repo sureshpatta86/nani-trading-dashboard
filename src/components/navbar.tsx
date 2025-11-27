@@ -17,13 +17,17 @@ import {
   TrendingUp,
   Briefcase,
   LogOut,
-  User,
   Settings,
   ChevronDown,
   Sparkles,
   Upload,
   Menu,
   FileBarChart,
+  Wrench,
+  Calculator,
+  Search,
+  ExternalLink,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -38,10 +42,25 @@ const navigation = [
   { name: "AI Insights", href: "/insights", icon: Sparkles },
 ];
 
+const screeners = [
+  {
+    name: "Swing Screener",
+    href: "https://chartink.com/screener/fin-viraj-swing-trading-n",
+    description: "Swing trading opportunities",
+  },
+  {
+    name: "Long Term Screener",
+    href: "https://chartink.com/screener/weekly-long-term-suresh",
+    description: "Weekly long-term picks",
+  },
+];
+
 export function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const isToolsActive = pathname === "/tools";
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -81,6 +100,58 @@ export function Navbar() {
                   </Link>
                 );
               })}
+              
+              {/* Tools Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 h-auto",
+                      isToolsActive
+                        ? "bg-primary/10 text-primary shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <Wrench className={cn("h-4 w-4", isToolsActive && "text-primary")} />
+                    Tools
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Calculator className="h-4 w-4 text-primary" />
+                    Trading Tools
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link href="/tools" className="cursor-pointer">
+                      <Wrench className="h-4 w-4 mr-2" />
+                      Calculators
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-primary" />
+                    Screeners
+                  </DropdownMenuLabel>
+                  {screeners.map((screener) => (
+                    <DropdownMenuItem key={screener.name} asChild>
+                      <a
+                        href={screener.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cursor-pointer flex items-center justify-between"
+                      >
+                        <span className="flex items-center">
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          {screener.name}
+                        </span>
+                        <ExternalLink className="h-3 w-3 opacity-50" />
+                      </a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -173,6 +244,64 @@ export function Navbar() {
                   </Link>
                 );
               })}
+              
+              {/* Mobile Tools Section */}
+              <div className="pt-2">
+                <button
+                  onClick={() => setMobileToolsOpen(!mobileToolsOpen)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
+                    isToolsActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <Wrench className={cn("h-5 w-5", isToolsActive && "text-primary")} />
+                    Tools
+                  </span>
+                  <ChevronRight className={cn("h-4 w-4 transition-transform", mobileToolsOpen && "rotate-90")} />
+                </button>
+                
+                {mobileToolsOpen && (
+                  <div className="ml-4 mt-1 space-y-1 border-l-2 border-border/50 pl-4">
+                    <Link
+                      href="/tools"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                        isToolsActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <Calculator className="h-4 w-4" />
+                      Calculators
+                    </Link>
+                    
+                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Screeners
+                    </div>
+                    
+                    {screeners.map((screener) => (
+                      <a
+                        key={screener.name}
+                        href={screener.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <span className="flex items-center gap-3">
+                          <Search className="h-4 w-4" />
+                          {screener.name}
+                        </span>
+                        <ExternalLink className="h-3 w-3 opacity-50" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

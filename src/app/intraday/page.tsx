@@ -33,7 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, Download, Upload, Wallet, Target, BarChart3, Calculator, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, Download, Upload, Wallet, Target, BarChart3, Calculator, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarDays } from "lucide-react";
 import { CSVImportDialog } from "@/components/csv-import-dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -393,6 +393,9 @@ export default function IntradayLogPage() {
   const winningTrades = trades.filter((t) => t.netProfitLoss > 0).length;
   const losingTrades = trades.filter((t) => t.netProfitLoss < 0).length;
   const winRate = trades.length > 0 ? (winningTrades / trades.length) * 100 : 0;
+  
+  // Calculate unique trading days
+  const tradingDays = new Set(trades.map((t) => new Date(t.tradeDate).toDateString())).size;
 
   // Pagination calculations
   const totalPages = Math.ceil(trades.length / tradesPerPage);
@@ -661,6 +664,20 @@ export default function IntradayLogPage() {
             <div className="text-xl font-bold">{trades.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               <span className="text-green-600 dark:text-green-400">{winningTrades}W</span> / <span className="text-red-600 dark:text-red-400">{losingTrades}L</span>
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-cyan-500/10 via-card to-card">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full -mr-8 -mt-8" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Trading Days</CardTitle>
+            <CalendarDays className="h-4 w-4 text-cyan-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-cyan-600 dark:text-cyan-400">{tradingDays}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {trades.length > 0 ? (trades.length / tradingDays).toFixed(1) : 0} trades/day
             </p>
           </CardContent>
         </Card>

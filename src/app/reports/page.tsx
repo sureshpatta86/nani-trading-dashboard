@@ -41,6 +41,7 @@ import {
   ChevronsRight,
   FileText,
   PieChart,
+  CalendarDays,
 } from "lucide-react";
 
 interface IntradayTrade {
@@ -62,6 +63,7 @@ type PeriodType = "weekly" | "monthly" | "yearly" | "custom";
 
 interface ReportStats {
   totalTrades: number;
+  tradingDays: number;
   winningTrades: number;
   losingTrades: number;
   breakEvenTrades: number;
@@ -168,9 +170,13 @@ export default function ReportsPage() {
     const totalPL = filteredTrades.reduce((sum, t) => sum + t.netProfitLoss, 0);
     
     const scripts = [...new Set(filteredTrades.map((t) => t.script))];
+    
+    // Calculate unique trading days
+    const tradingDays = new Set(filteredTrades.map((t) => new Date(t.tradeDate).toDateString())).size;
 
     return {
       totalTrades: filteredTrades.length,
+      tradingDays,
       winningTrades: winning.length,
       losingTrades: losing.length,
       breakEvenTrades: breakEven.length,
@@ -360,7 +366,7 @@ export default function ReportsPage() {
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -372,6 +378,20 @@ export default function ReportsPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="text-green-600">{stats.winningTrades}W</span> / <span className="text-red-600">{stats.losingTrades}L</span>
                 {stats.breakEvenTrades > 0 && <span className="text-muted-foreground"> / {stats.breakEvenTrades}BE</span>}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-cyan-500/10 via-card to-card">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full -mr-8 -mt-8" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Trading Days</CardTitle>
+              <CalendarDays className="h-4 w-4 text-cyan-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{stats.tradingDays}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.tradingDays > 0 ? (stats.totalTrades / stats.tradingDays).toFixed(1) : 0} trades/day
               </p>
             </CardContent>
           </Card>
