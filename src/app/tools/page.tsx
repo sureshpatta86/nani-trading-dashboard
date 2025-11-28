@@ -46,8 +46,8 @@ export default function ToolsPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-              <Wrench className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+              <Wrench className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Trading Tools</h1>
           </div>
@@ -59,22 +59,22 @@ export default function ToolsPage() {
         {/* Tabs */}
         <Tabs defaultValue="risk-reward" className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1 p-1.5">
-            <TabsTrigger value="risk-reward" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-purple-500/10">
+            <TabsTrigger value="risk-reward" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Target className="h-4 w-4" />
               <span className="hidden sm:inline">Risk/Reward</span>
               <span className="sm:hidden">R/R</span>
             </TabsTrigger>
-            <TabsTrigger value="pl-calculator" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/10 data-[state=active]:to-teal-500/10">
+            <TabsTrigger value="pl-calculator" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Calculator className="h-4 w-4" />
               <span className="hidden sm:inline">P&L Calculator</span>
               <span className="sm:hidden">P&L</span>
             </TabsTrigger>
-            <TabsTrigger value="position-sizing" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500/10 data-[state=active]:to-purple-500/10">
+            <TabsTrigger value="position-sizing" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Scale className="h-4 w-4" />
               <span className="hidden sm:inline">Position Sizing</span>
               <span className="sm:hidden">Position</span>
             </TabsTrigger>
-            <TabsTrigger value="lot-size" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-amber-500/10">
+            <TabsTrigger value="lot-size" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Layers className="h-4 w-4" />
               <span className="hidden sm:inline">Lot Size</span>
               <span className="sm:hidden">Lots</span>

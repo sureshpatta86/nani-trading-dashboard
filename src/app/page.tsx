@@ -187,7 +187,7 @@ export default function DashboardPage() {
       
       <main className="w-[90%] max-w-[1620px] mx-auto px-4 py-8">
         {/* Welcome Section */}
-        <div className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white shadow-xl">
+        <div className="mb-8 relative overflow-hidden rounded-2xl bg-primary p-8 text-primary-foreground shadow-xl">
           <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] bg-[length:24px_24px]" />
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -195,7 +195,7 @@ export default function DashboardPage() {
                 <h2 className="text-3xl font-bold mb-2">
                   Welcome back, {session?.user?.name || "Trader"}! 👋
                 </h2>
-                <p className="text-blue-100 max-w-xl">
+                <p className="text-primary-foreground/80 max-w-xl">
                   Track your trades, analyze performance, and get AI-powered insights to improve your trading strategy.
                 </p>
               </div>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                 onClick={refreshPrices} 
                 disabled={refreshing}
                 variant="secondary"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+                className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-primary-foreground/30 backdrop-blur-sm"
               >
                 {refreshing ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -213,10 +213,10 @@ export function LotSizeCalculator() {
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Input Section */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-orange-600/10 to-amber-600/10 pb-4">
+        <CardHeader className="bg-primary/5 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-600 to-amber-600 flex items-center justify-center">
-              <Layers className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <Layers className="h-4 w-4 text-primary-foreground" />
             </div>
             Lot Size Parameters
           </CardTitle>
@@ -326,10 +326,10 @@ export function LotSizeCalculator() {
 
       {/* Results Section */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-rose-600/10 to-pink-600/10 pb-4">
+        <CardHeader className="bg-accent/10 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-600 to-pink-600 flex items-center justify-center">
-              <BarChart3 className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
+              <BarChart3 className="h-4 w-4 text-accent-foreground" />
             </div>
             Lot Size Analysis
           </CardTitle>

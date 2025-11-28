@@ -161,8 +161,8 @@ export default function SignIn() {
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-4">
-              <div className="h-14 w-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <TrendingUp className="h-8 w-8 text-white" />
+              <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="h-8 w-8 text-primary-foreground" />
               </div>
               <div className="text-left">
                 <h1 className="text-2xl font-bold">Trading Journal</h1>

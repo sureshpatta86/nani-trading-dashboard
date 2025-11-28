@@ -250,12 +250,12 @@ export default function InsightsPage() {
 
         {/* Generate/Refresh Controls */}
         <Card className="mb-8 relative overflow-hidden border-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="absolute inset-0 bg-primary/10" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-32 -mt-32" />
           <CardHeader className="relative">
             <CardTitle className="flex items-center gap-3 text-2xl">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                <Brain className="h-5 w-5 text-white" />
+              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+                <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
               AI Trading Analysis
             </CardTitle>
@@ -271,7 +271,6 @@ export default function InsightsPage() {
               <Button 
                 onClick={generateInsights} 
                 disabled={isLoading}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 size="lg"
               >
                 {isLoading ? (
@@ -326,8 +325,8 @@ export default function InsightsPage() {
         {/* No Insights Yet */}
         {!isLoading && !insights && !error && (
           <div className="text-center py-16">
-            <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 mb-6">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 opacity-20 blur-xl" />
+            <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-primary/20 mb-6">
+              <div className="absolute inset-0 rounded-2xl bg-primary opacity-20 blur-xl" />
               <Sparkles className="h-12 w-12 text-primary relative" />
             </div>
             <h3 className="text-2xl font-bold mb-4">Ready to Analyze Your Trades</h3>

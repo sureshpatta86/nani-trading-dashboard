@@ -113,10 +113,10 @@ export function PositionSizingCalculator() {
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Input Section */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-violet-600/10 to-purple-600/10 pb-4">
+        <CardHeader className="bg-primary/5 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
-              <Scale className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <Scale className="h-4 w-4 text-primary-foreground" />
             </div>
             Position Parameters
           </CardTitle>
@@ -240,10 +240,10 @@ export function PositionSizingCalculator() {
 
       {/* Results Section */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-cyan-600/10 to-blue-600/10 pb-4">
+        <CardHeader className="bg-accent/10 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
-              <PieChart className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
+              <PieChart className="h-4 w-4 text-accent-foreground" />
             </div>
             Position Size Analysis
           </CardTitle>
@@ -269,7 +269,7 @@ export function PositionSizingCalculator() {
                 </div>
                 <div className="h-4 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                    className="h-full bg-primary transition-all duration-500"
                     style={{ width: `${Math.min(calculations.positionPercent, 100)}%` }}
                   />
                 </div>

@@ -69,9 +69,9 @@ export function Navbar() {
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center space-x-2.5 group">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity" />
-                <div className="relative h-9 w-9 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
+                <div className="absolute inset-0 bg-primary rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity" />
+                <div className="relative h-9 w-9 bg-primary rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-primary-foreground" />
                 </div>
               </div>
               <div className="flex flex-col">
@@ -173,7 +173,7 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 hover:bg-muted">
                     <div className="hidden md:flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                         {(session.user.name?.[0] || session.user.email?.[0] || 'U').toUpperCase()}
                       </div>
                       <span className="text-sm font-medium max-w-[120px] truncate">
@@ -181,7 +181,7 @@ export function Navbar() {
                       </span>
                     </div>
                     <div className="md:hidden">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                         {(session.user.name?.[0] || session.user.email?.[0] || 'U').toUpperCase()}
                       </div>
                     </div>

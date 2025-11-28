@@ -193,10 +193,10 @@ export function PLCalculator() {
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Input Section */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-emerald-600/10 to-teal-600/10 pb-4">
+        <CardHeader className="bg-primary/5 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center">
-              <Calculator className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <Calculator className="h-4 w-4 text-primary-foreground" />
             </div>
             Trade Details
           </CardTitle>
@@ -314,10 +314,10 @@ export function PLCalculator() {
 
       {/* Results Section */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-amber-600/10 to-orange-600/10 pb-4">
+        <CardHeader className="bg-accent/10 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center">
-              <IndianRupee className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
+              <IndianRupee className="h-4 w-4 text-accent-foreground" />
             </div>
             Profit & Loss Analysis
           </CardTitle>
