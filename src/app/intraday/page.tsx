@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,8 @@ export default function IntradayLogPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("intraday");
+  const tc = useTranslations("common");
   const [trades, setTrades] = useState<IntradayTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -204,7 +207,7 @@ export default function IntradayLogPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this trade?")) return;
+    if (!confirm(t("confirmDelete"))) return;
 
     try {
       const response = await fetch(`/api/intraday/${id}`, {
@@ -214,11 +217,11 @@ export default function IntradayLogPage() {
       if (response.ok) {
         await fetchTrades();
       } else {
-        alert("Failed to delete trade");
+        alert(tc("deleteFailed"));
       }
     } catch (error) {
       console.error("Failed to delete trade:", error);
-      alert("Failed to delete trade");
+      alert(tc("deleteFailed"));
     }
   };
 
@@ -384,8 +387,8 @@ export default function IntradayLogPage() {
     if (successCount > 0) {
       await fetchTrades();
       toast({
-        title: "Import Successful",
-        description: `Imported ${successCount} trade(s) successfully.`,
+        title: t("importSuccess"),
+        description: t("importSuccessDesc", { count: successCount }),
       });
     }
 
@@ -399,7 +402,7 @@ export default function IntradayLogPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading trades...</p>
+            <p className="text-muted-foreground">{t("loadingTrades")}</p>
           </div>
         </div>
       </div>
@@ -506,8 +509,8 @@ export default function IntradayLogPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Intraday Trading Log</h1>
-            <p className="text-muted-foreground mt-1">Track your daily trades and performance</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="text-muted-foreground mt-1">{t("description")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -517,20 +520,20 @@ export default function IntradayLogPage() {
                   setEditingId(null);
                 }}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Trade
+                  {t("addTrade")}
                 </Button>
               </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingId ? "Edit Trade" : "Add New Trade"}</DialogTitle>
+                <DialogTitle>{editingId ? t("editTrade") : t("addNewTrade")}</DialogTitle>
                 <DialogDescription>
-                  Enter your intraday trade details
+                  {t("enterTradeDetails")}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="tradeDate">Trade Date</Label>
+                    <Label htmlFor="tradeDate">{t("tradeDate")}</Label>
                     <Input
                       id="tradeDate"
                       type="date"
@@ -541,10 +544,10 @@ export default function IntradayLogPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="script">Script/Symbol</Label>
+                    <Label htmlFor="script">{t("scriptSymbol")}</Label>
                     <Input
                       id="script"
-                      placeholder="e.g., RELIANCE, TCS"
+                      placeholder={t("scriptPlaceholder")}
                       value={formData.script}
                       onChange={(e) => setFormData({ ...formData, script: e.target.value.toUpperCase() })}
                       required
@@ -552,7 +555,7 @@ export default function IntradayLogPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="type">Type</Label>
+                    <Label htmlFor="type">{t("type")}</Label>
                     <Select
                       value={formData.type}
                       onValueChange={(value: "BUY" | "SELL") => setFormData({ ...formData, type: value })}
@@ -561,8 +564,8 @@ export default function IntradayLogPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="BUY">Buy</SelectItem>
-                        <SelectItem value="SELL">Sell</SelectItem>
+                        <SelectItem value="BUY">{t("typeBuy")}</SelectItem>
+                        <SelectItem value="SELL">{t("typeSell")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -570,7 +573,7 @@ export default function IntradayLogPage() {
 
                 <div className="grid gap-4 md:grid-cols-4">
                   <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity</Label>
+                    <Label htmlFor="quantity">{t("quantity")}</Label>
                     <Input
                       id="quantity"
                       type="number"
@@ -582,7 +585,7 @@ export default function IntradayLogPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buyPrice">Buy Price</Label>
+                    <Label htmlFor="buyPrice">{t("buyPrice")}</Label>
                     <Input
                       id="buyPrice"
                       type="number"
@@ -595,7 +598,7 @@ export default function IntradayLogPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sellPrice">Sell Price</Label>
+                    <Label htmlFor="sellPrice">{t("sellPrice")}</Label>
                     <Input
                       id="sellPrice"
                       type="number"
@@ -608,7 +611,7 @@ export default function IntradayLogPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="charges">Charges</Label>
+                    <Label htmlFor="charges">{t("charges")}</Label>
                     <Input
                       id="charges"
                       type="number"
@@ -618,16 +621,16 @@ export default function IntradayLogPage() {
                       onChange={(e) => setFormData({ ...formData, charges: e.target.value })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      ⚠️ Note: Charges are not stored. Please enter each time.
+                      {t("chargesNote")}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="remarks">Remarks (Optional)</Label>
+                  <Label htmlFor="remarks">{t("remarks")}</Label>
                   <Textarea
                     id="remarks"
-                    placeholder="Trade notes, strategy, market conditions..."
+                    placeholder={t("remarksPlaceholder")}
                     value={formData.remarks}
                     onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                     rows={2}
@@ -636,21 +639,21 @@ export default function IntradayLogPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="mood">Mood (Optional)</Label>
+                    <Label htmlFor="mood">{t("mood")}</Label>
                     <Select
                       value={formData.mood}
                       onValueChange={(value) => setFormData({ ...formData, mood: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select mood" />
+                        <SelectValue placeholder={t("filterMood")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CALM">😌 Calm</SelectItem>
-                        <SelectItem value="ANXIOUS">😰 Anxious</SelectItem>
-                        <SelectItem value="CONFIDENT">😎 Confident</SelectItem>
-                        <SelectItem value="OVERCONFIDENT">🤩 Over Confident</SelectItem>
-                        <SelectItem value="FOMO">😱 FOMO</SelectItem>
-                        <SelectItem value="PANICKED">😨 Panicked</SelectItem>
+                        <SelectItem value="CALM">{t("moodCalm")}</SelectItem>
+                        <SelectItem value="ANXIOUS">{t("moodAnxious")}</SelectItem>
+                        <SelectItem value="CONFIDENT">{t("moodConfident")}</SelectItem>
+                        <SelectItem value="OVERCONFIDENT">{t("moodOverConfident")}</SelectItem>
+                        <SelectItem value="FOMO">{t("moodFomo")}</SelectItem>
+                        <SelectItem value="PANICKED">{t("moodPanicked")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -664,7 +667,7 @@ export default function IntradayLogPage() {
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                     />
                     <Label htmlFor="followSetup" className="cursor-pointer">
-                      Followed trading setup/rules?
+                      {t("followSetup")}
                     </Label>
                   </div>
                 </div>
@@ -672,11 +675,11 @@ export default function IntradayLogPage() {
                 {formData.buyPrice && formData.sellPrice && formData.quantity && (
                   <div className="p-4 bg-muted rounded-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <span>Estimated P&L:</span>
+                      <span>{t("estimatedPL")}:</span>
                       <span className="font-medium">₹{calculateProfitLoss().profitLoss.toFixed(2)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm mt-1">
-                      <span>Net P&L (after charges):</span>
+                      <span>{t("netPLAfterCharges")}:</span>
                       <span
                         className={`font-bold ${
                           calculateProfitLoss().netProfitLoss >= 0 ? "text-green-600" : "text-red-600"
@@ -690,10 +693,10 @@ export default function IntradayLogPage() {
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : editingId ? "Update Trade" : "Add Trade"}
+                    {isSubmitting ? tc("saving") : editingId ? t("updateTrade") : t("addTrade")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -701,11 +704,11 @@ export default function IntradayLogPage() {
           </Dialog>
           <Button onClick={() => setImportDialogOpen(true)} variant="outline">
             <Upload className="mr-2 h-4 w-4" />
-            Import CSV
+            {t("importCSV")}
           </Button>
           <Button onClick={exportToCSV} variant="outline" disabled={trades.length === 0}>
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {t("exportCSV")}
           </Button>
         </div>
       </div>
@@ -726,8 +729,8 @@ export default function IntradayLogPage() {
           "Remarks",
           "Follow Setup",
         ]}
-        title="Import Intraday Trades"
-        description="Upload a CSV file to import multiple trades at once. Date format should be DD/MM/YYYY."
+        title={t("importTrades")}
+        description={t("importDescription")}
         templateExample={`Date,Script,Type,Quantity,Buy Price,Sell Price,Charges,Remarks,Follow Setup
 24/11/2025,RELIANCE,BUY,100,2500.00,2520.00,20.00,Good trade,Yes
 24/11/2025,TCS,SELL,50,3400.00,3390.00,15.00,Stop loss hit,No`}
@@ -738,19 +741,19 @@ export default function IntradayLogPage() {
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-slate-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-slate-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Initial Capital</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("initialCapital")}</CardTitle>
             <Wallet className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">₹{initialCapital.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Starting amount</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("startingAmount")}</p>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Current Capital</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("currentCapital")}</CardTitle>
             <BarChart3 className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -766,7 +769,7 @@ export default function IntradayLogPage() {
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-indigo-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Trades</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalTrades")}</CardTitle>
             <BarChart3 className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
@@ -780,13 +783,13 @@ export default function IntradayLogPage() {
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-cyan-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Trading Days</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("tradingDays")}</CardTitle>
             <CalendarDays className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-cyan-600 dark:text-cyan-400">{tradingDays}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {trades.length > 0 ? (trades.length / tradingDays).toFixed(1) : 0} trades/day
+              {trades.length > 0 ? (trades.length / tradingDays).toFixed(1) : 0} {t("tradesPerDay")}
             </p>
           </CardContent>
         </Card>
@@ -794,7 +797,7 @@ export default function IntradayLogPage() {
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Net P&L</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("netPL")}</CardTitle>
             {totalPL >= 0 ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
           </CardHeader>
           <CardContent>
@@ -802,7 +805,7 @@ export default function IntradayLogPage() {
               ₹{totalPL.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {initialCapital > 0 ? `${((totalPL / initialCapital) * 100).toFixed(2)}% ROI` : "Set capital"}
+              {initialCapital > 0 ? `${((totalPL / initialCapital) * 100).toFixed(2)}% ${t("roi")}` : t("setCapital")}
             </p>
           </CardContent>
         </Card>
@@ -810,26 +813,26 @@ export default function IntradayLogPage() {
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-amber-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("winRate")}</CardTitle>
             <Target className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-amber-600 dark:text-amber-400">{winRate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground mt-1">Success ratio</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("successRatio")}</p>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Avg P&L</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("avgPL")}</CardTitle>
             <Calculator className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
               ₹{trades.length > 0 ? (totalPL / trades.length).toFixed(2) : "0.00"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Per trade</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("perTrade")}</p>
           </CardContent>
         </Card>
       </div>
@@ -839,8 +842,8 @@ export default function IntradayLogPage() {
         <CardHeader className="bg-muted/30">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <CardTitle className="text-lg">Recent Trades</CardTitle>
-              <CardDescription>Your intraday trading history {hasActiveFilters && `(${filteredTrades.length} of ${trades.length} trades)`}</CardDescription>
+              <CardTitle className="text-lg">{t("recentTrades")}</CardTitle>
+              <CardDescription>{t("tradingHistory")} {hasActiveFilters && `(${filteredTrades.length} ${t("filtered")} ${trades.length} ${tc("trades")})`}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -850,7 +853,7 @@ export default function IntradayLogPage() {
                 className="h-8"
               >
                 <Filter className="h-4 w-4 mr-1" />
-                Filters
+                {tc("filters")}
                 {hasActiveFilters && (
                   <span className="ml-1 bg-primary-foreground text-primary rounded-full px-1.5 py-0.5 text-xs">
                     {Object.entries(filters).filter(([key, v]) => {
@@ -863,10 +866,10 @@ export default function IntradayLogPage() {
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
                   <X className="h-4 w-4 mr-1" />
-                  Clear
+                  {tc("clear")}
                 </Button>
               )}
-              <span className="text-sm text-muted-foreground ml-2">Show:</span>
+              <span className="text-sm text-muted-foreground ml-2">{tc("show")}:</span>
               <Select value={tradesPerPage.toString()} onValueChange={handleTradesPerPageChange}>
                 <SelectTrigger className="w-20 h-8">
                   <SelectValue />
@@ -878,7 +881,7 @@ export default function IntradayLogPage() {
                   <SelectItem value="100">100</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-sm text-muted-foreground">per page</span>
+              <span className="text-sm text-muted-foreground">{tc("perPage")}</span>
             </div>
           </div>
 
@@ -888,7 +891,7 @@ export default function IntradayLogPage() {
               <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
                 {/* Date Range */}
                 <div className="space-y-1">
-                  <Label className="text-xs">From Date</Label>
+                  <Label className="text-xs">{t("filterFromDate")}</Label>
                   <Input
                     type="date"
                     value={filters.dateFrom}
@@ -897,7 +900,7 @@ export default function IntradayLogPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">To Date</Label>
+                  <Label className="text-xs">{t("filterToDate")}</Label>
                   <Input
                     type="date"
                     value={filters.dateTo}
@@ -908,13 +911,13 @@ export default function IntradayLogPage() {
 
                 {/* Script Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Script</Label>
+                  <Label className="text-xs">{t("filterScript")}</Label>
                   <Select value={filters.script} onValueChange={(v) => handleFilterChange("script", v)}>
                     <SelectTrigger className="h-8 text-sm">
-                      <SelectValue placeholder="All Scripts" />
+                      <SelectValue placeholder={t("filterAllScripts")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Scripts</SelectItem>
+                      <SelectItem value="all">{t("filterAllScripts")}</SelectItem>
                       {uniqueScripts.map((script) => (
                         <SelectItem key={script} value={script}>
                           {script}
@@ -926,64 +929,64 @@ export default function IntradayLogPage() {
 
                 {/* Type Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Type</Label>
+                  <Label className="text-xs">{t("filterType")}</Label>
                   <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
                     <SelectTrigger className="h-8 text-sm">
-                      <SelectValue placeholder="All Types" />
+                      <SelectValue placeholder={t("filterAllTypes")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="BUY">Buy</SelectItem>
-                      <SelectItem value="SELL">Sell</SelectItem>
+                      <SelectItem value="all">{t("filterAllTypes")}</SelectItem>
+                      <SelectItem value="BUY">{t("typeBuy")}</SelectItem>
+                      <SelectItem value="SELL">{t("typeSell")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* P&L Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs">P&L</Label>
+                  <Label className="text-xs">{t("filterPL")}</Label>
                   <Select value={filters.plType} onValueChange={(v) => handleFilterChange("plType", v)}>
                     <SelectTrigger className="h-8 text-sm">
-                      <SelectValue placeholder="All" />
+                      <SelectValue placeholder={tc("all")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="profit">Profit Only</SelectItem>
-                      <SelectItem value="loss">Loss Only</SelectItem>
+                      <SelectItem value="all">{tc("all")}</SelectItem>
+                      <SelectItem value="profit">{t("filterProfitOnly")}</SelectItem>
+                      <SelectItem value="loss">{t("filterLossOnly")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Mood Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Mood</Label>
+                  <Label className="text-xs">{t("filterMood")}</Label>
                   <Select value={filters.mood} onValueChange={(v) => handleFilterChange("mood", v)}>
                     <SelectTrigger className="h-8 text-sm">
-                      <SelectValue placeholder="All Moods" />
+                      <SelectValue placeholder={t("filterAllMoods")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Moods</SelectItem>
-                      <SelectItem value="CALM">😌 Calm</SelectItem>
-                      <SelectItem value="CONFIDENT">😎 Confident</SelectItem>
-                      <SelectItem value="OVERCONFIDENT">🤩 Over Confident</SelectItem>
-                      <SelectItem value="ANXIOUS">😰 Anxious</SelectItem>
-                      <SelectItem value="FOMO">😱 FOMO</SelectItem>
-                      <SelectItem value="PANICKED">😨 Panicked</SelectItem>
+                      <SelectItem value="all">{t("filterAllMoods")}</SelectItem>
+                      <SelectItem value="CALM">{t("moodCalm")}</SelectItem>
+                      <SelectItem value="CONFIDENT">{t("moodConfident")}</SelectItem>
+                      <SelectItem value="OVERCONFIDENT">{t("moodOverConfident")}</SelectItem>
+                      <SelectItem value="ANXIOUS">{t("moodAnxious")}</SelectItem>
+                      <SelectItem value="FOMO">{t("moodFomo")}</SelectItem>
+                      <SelectItem value="PANICKED">{t("moodPanicked")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Follow Setup Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Setup</Label>
+                  <Label className="text-xs">{t("filterSetup")}</Label>
                   <Select value={filters.followSetup} onValueChange={(v) => handleFilterChange("followSetup", v)}>
                     <SelectTrigger className="h-8 text-sm">
-                      <SelectValue placeholder="All" />
+                      <SelectValue placeholder={tc("all")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="yes">Followed</SelectItem>
-                      <SelectItem value="no">Not Followed</SelectItem>
+                      <SelectItem value="all">{tc("all")}</SelectItem>
+                      <SelectItem value="yes">{t("filterFollowed")}</SelectItem>
+                      <SelectItem value="no">{t("filterNotFollowed")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -993,13 +996,13 @@ export default function IntradayLogPage() {
               {hasActiveFilters && (
                 <div className="mt-3 pt-3 border-t flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">
-                    Showing <span className="font-medium text-foreground">{filteredTrades.length}</span> of{" "}
-                    <span className="font-medium text-foreground">{trades.length}</span> trades
+                    {tc("showing")} <span className="font-medium text-foreground">{filteredTrades.length}</span> {tc("of")}{" "}
+                    <span className="font-medium text-foreground">{trades.length}</span> {tc("trades")}
                     {filteredTrades.length > 0 && (
                       <>
                         {" • "}
                         <span className={filteredTrades.reduce((sum, t) => sum + t.netProfitLoss, 0) >= 0 ? "text-green-600" : "text-red-600"}>
-                          Net P&L: ₹{filteredTrades.reduce((sum, t) => sum + t.netProfitLoss, 0).toFixed(2)}
+                          {t("netPL")}: ₹{filteredTrades.reduce((sum, t) => sum + t.netProfitLoss, 0).toFixed(2)}
                         </span>
                       </>
                     )}
@@ -1015,8 +1018,8 @@ export default function IntradayLogPage() {
               <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <BarChart3 className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium mb-2">No trades logged yet</h3>
-              <p className="text-muted-foreground mb-4">Click &quot;Add Trade&quot; button above to get started!</p>
+              <h3 className="text-lg font-medium mb-2">{t("noTrades")}</h3>
+              <p className="text-muted-foreground mb-4">{t("noTradesHint")}</p>
             </div>
           ) : (
             <>
@@ -1024,19 +1027,19 @@ export default function IntradayLogPage() {
                 <Table>
                   <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                      <TableHead className="min-w-[100px]">Date</TableHead>
-                      <TableHead className="min-w-[140px]">Script</TableHead>
-                      <TableHead className="min-w-[80px]">Type</TableHead>
-                      <TableHead className="text-right min-w-[80px]">Qty</TableHead>
-                      <TableHead className="text-right min-w-[100px]">Buy</TableHead>
-                      <TableHead className="text-right min-w-[100px]">Sell</TableHead>
-                      <TableHead className="text-right min-w-[120px]">P&L</TableHead>
-                      <TableHead className="text-right min-w-[100px]">Charges</TableHead>
-                      <TableHead className="text-right min-w-[130px]">Net P&L</TableHead>
-                      <TableHead className="text-center min-w-[80px]">Setup</TableHead>
-                      <TableHead className="text-center min-w-[100px]">Mood</TableHead>
-                      <TableHead className="min-w-[200px]">Remarks</TableHead>
-                      <TableHead className="text-right min-w-[100px]">Actions</TableHead>
+                      <TableHead className="min-w-[100px]">{t("tableDate")}</TableHead>
+                      <TableHead className="min-w-[140px]">{t("tableScript")}</TableHead>
+                      <TableHead className="min-w-[80px]">{t("tableType")}</TableHead>
+                      <TableHead className="text-right min-w-[80px]">{t("tableQty")}</TableHead>
+                      <TableHead className="text-right min-w-[100px]">{t("tableBuy")}</TableHead>
+                      <TableHead className="text-right min-w-[100px]">{t("tableSell")}</TableHead>
+                      <TableHead className="text-right min-w-[120px]">{t("tablePL")}</TableHead>
+                      <TableHead className="text-right min-w-[100px]">{t("tableCharges")}</TableHead>
+                      <TableHead className="text-right min-w-[130px]">{t("tableNetPL")}</TableHead>
+                      <TableHead className="text-center min-w-[80px]">{t("tableSetup")}</TableHead>
+                      <TableHead className="text-center min-w-[100px]">{t("tableMood")}</TableHead>
+                      <TableHead className="min-w-[200px]">{t("tableRemarks")}</TableHead>
+                      <TableHead className="text-right min-w-[100px]">{t("tableActions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1142,8 +1145,8 @@ export default function IntradayLogPage() {
               {/* Pagination Controls */}
               <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-4 border-t bg-muted/20">
                 <div className="text-sm text-muted-foreground">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredTrades.length)} of {filteredTrades.length} trades
-                  {hasActiveFilters && ` (filtered from ${trades.length})`}
+                  {tc("showing")} {startIndex + 1} {tc("to")} {Math.min(endIndex, filteredTrades.length)} {tc("of")} {filteredTrades.length} {tc("trades")}
+                  {hasActiveFilters && ` (${t("filtered")} ${trades.length})`}
                 </div>
                 <div className="flex items-center gap-1">
                   <Button

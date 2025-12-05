@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,8 @@ interface ReportStats {
 export default function ReportsPage() {
   const { status } = useSession();
   const router = useRouter();
+  const t = useTranslations("reports");
+  const tc = useTranslations("common");
   const [trades, setTrades] = useState<IntradayTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodType>("monthly");
@@ -284,7 +287,7 @@ export default function ReportsPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading reports...</p>
+            <p className="text-muted-foreground">{t("loadingReports")}</p>
           </div>
         </div>
       </div>
@@ -298,13 +301,13 @@ export default function ReportsPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Trading Reports</h1>
-            <p className="text-muted-foreground mt-1">Analyze your trading performance over time</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="text-muted-foreground mt-1">{t("description")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={exportReport} variant="outline" disabled={filteredTrades.length === 0}>
               <Download className="mr-2 h-4 w-4" />
-              Export Report
+              {t("exportReport")}
             </Button>
           </div>
         </div>
@@ -314,22 +317,22 @@ export default function ReportsPage() {
           <CardHeader className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="h-5 w-5 text-primary" />
-              Select Period
+              {t("selectPeriod")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-2">
-                <Label>Period Type</Label>
+                <Label>{t("periodType")}</Label>
                 <Select value={period} onValueChange={(v: PeriodType) => { setPeriod(v); setCurrentPage(1); }}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">This Week</SelectItem>
-                    <SelectItem value="monthly">This Month</SelectItem>
-                    <SelectItem value="yearly">This Year</SelectItem>
-                    <SelectItem value="custom">Custom Range</SelectItem>
+                    <SelectItem value="weekly">{t("thisWeek")}</SelectItem>
+                    <SelectItem value="monthly">{t("thisMonth")}</SelectItem>
+                    <SelectItem value="yearly">{t("thisYear")}</SelectItem>
+                    <SelectItem value="custom">{t("customRange")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -337,7 +340,7 @@ export default function ReportsPage() {
               {period === "custom" && (
                 <>
                   <div className="space-y-2">
-                    <Label>Start Date</Label>
+                    <Label>{t("startDate")}</Label>
                     <Input
                       type="date"
                       value={customStartDate}
@@ -346,7 +349,7 @@ export default function ReportsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>End Date</Label>
+                    <Label>{t("endDate")}</Label>
                     <Input
                       type="date"
                       value={customEndDate}
@@ -370,7 +373,7 @@ export default function ReportsPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Trades</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalTrades")}</CardTitle>
               <BarChart3 className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -385,13 +388,13 @@ export default function ReportsPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-cyan-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Trading Days</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("tradingDays")}</CardTitle>
               <CalendarDays className="h-4 w-4 text-cyan-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{stats.tradingDays}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.tradingDays > 0 ? (stats.totalTrades / stats.tradingDays).toFixed(1) : 0} trades/day
+                {stats.tradingDays > 0 ? (stats.totalTrades / stats.tradingDays).toFixed(1) : 0} {t("tradesPerDay")}
               </p>
             </CardContent>
           </Card>
@@ -399,7 +402,7 @@ export default function ReportsPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Net P&L</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("netPL")}</CardTitle>
               {stats.totalProfitLoss >= 0 ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
             </CardHeader>
             <CardContent>
@@ -407,7 +410,7 @@ export default function ReportsPage() {
                 ₹{stats.totalProfitLoss.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Profit: ₹{stats.totalProfit.toFixed(0)} | Loss: ₹{stats.totalLoss.toFixed(0)}
+                {t("profit")}: ₹{stats.totalProfit.toFixed(0)} | {t("loss")}: ₹{stats.totalLoss.toFixed(0)}
               </p>
             </CardContent>
           </Card>
@@ -415,7 +418,7 @@ export default function ReportsPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-amber-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("winRate")}</CardTitle>
               <Target className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
@@ -423,7 +426,7 @@ export default function ReportsPage() {
                 {stats.winRate.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.winningTrades} of {stats.totalTrades} trades
+                {stats.winningTrades} {tc("of")} {stats.totalTrades} {tc("trades")}
               </p>
             </CardContent>
           </Card>
@@ -431,7 +434,7 @@ export default function ReportsPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Follow Setup %</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("followSetupPercent")}</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
@@ -439,7 +442,7 @@ export default function ReportsPage() {
                 {stats.followSetupRate.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.followSetupCount} of {stats.totalTrades} trades
+                {stats.followSetupCount} {tc("of")} {stats.totalTrades} {tc("trades")}
               </p>
             </CardContent>
           </Card>
@@ -447,28 +450,28 @@ export default function ReportsPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-cyan-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avg P&L/Trade</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("avgPLPerTrade")}</CardTitle>
               <Calculator className="h-4 w-4 text-cyan-500" />
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${stats.avgProfitPerTrade >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                 ₹{stats.avgProfitPerTrade.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Per trade average</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("perTradeAverage")}</p>
             </CardContent>
           </Card>
 
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-pink-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-16 h-16 bg-pink-500/10 rounded-full -mr-8 -mt-8" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Profit Factor</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("profitFactor")}</CardTitle>
               <PieChart className="h-4 w-4 text-pink-500" />
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${stats.profitFactor >= 1 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                 {stats.profitFactor === Infinity ? "∞" : stats.profitFactor.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Profit / Loss ratio</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("profitLossRatio")}</p>
             </CardContent>
           </Card>
         </div>
@@ -479,24 +482,24 @@ export default function ReportsPage() {
             <CardHeader className="bg-muted/30">
               <CardTitle className="text-lg flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-green-500" />
-                Winning Trades Analysis
+                {t("winningTradesAnalysis")}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Total Winning Trades</span>
+                <span className="text-muted-foreground">{t("totalWinningTrades")}</span>
                 <span className="font-medium text-green-600">{stats.winningTrades}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Total Profit</span>
+                <span className="text-muted-foreground">{t("totalProfit")}</span>
                 <span className="font-medium text-green-600">₹{stats.totalProfit.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Average Winning Trade</span>
+                <span className="text-muted-foreground">{t("avgWinningTrade")}</span>
                 <span className="font-medium text-green-600">₹{stats.avgWinningTrade.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-muted-foreground">Largest Win</span>
+                <span className="text-muted-foreground">{t("largestWin")}</span>
                 <span className="font-medium text-green-600">₹{stats.largestWin.toFixed(2)}</span>
               </div>
             </CardContent>
@@ -506,24 +509,24 @@ export default function ReportsPage() {
             <CardHeader className="bg-muted/30">
               <CardTitle className="text-lg flex items-center gap-2">
                 <TrendingDown className="h-5 w-5 text-red-500" />
-                Losing Trades Analysis
+                {t("losingTradesAnalysis")}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Total Losing Trades</span>
+                <span className="text-muted-foreground">{t("totalLosingTrades")}</span>
                 <span className="font-medium text-red-600">{stats.losingTrades}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Total Loss</span>
+                <span className="text-muted-foreground">{t("totalLoss")}</span>
                 <span className="font-medium text-red-600">₹{stats.totalLoss.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Average Losing Trade</span>
+                <span className="text-muted-foreground">{t("avgLosingTrade")}</span>
                 <span className="font-medium text-red-600">₹{stats.avgLosingTrade.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-muted-foreground">Largest Loss</span>
+                <span className="text-muted-foreground">{t("largestLoss")}</span>
                 <span className="font-medium text-red-600">₹{Math.abs(stats.largestLoss).toFixed(2)}</span>
               </div>
             </CardContent>
@@ -534,7 +537,7 @@ export default function ReportsPage() {
         {stats.tradedScripts.length > 0 && (
           <Card className="border-0 shadow-lg">
             <CardHeader className="bg-muted/30">
-              <CardTitle className="text-lg">Scripts Traded ({stats.tradedScripts.length})</CardTitle>
+              <CardTitle className="text-lg">{t("scriptsTraded")} ({stats.tradedScripts.length})</CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="flex flex-wrap gap-2">
@@ -556,11 +559,11 @@ export default function ReportsPage() {
           <CardHeader className="bg-muted/30">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <CardTitle className="text-lg">Trade Details</CardTitle>
-                <CardDescription>All trades for the selected period</CardDescription>
+                <CardTitle className="text-lg">{t("tradeDetails")}</CardTitle>
+                <CardDescription>{t("allTradesForPeriod")}</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Show:</span>
+                <span className="text-sm text-muted-foreground">{tc("show")}:</span>
                 <Select value={tradesPerPage.toString()} onValueChange={handleTradesPerPageChange}>
                   <SelectTrigger className="w-20 h-8">
                     <SelectValue />
@@ -572,7 +575,7 @@ export default function ReportsPage() {
                     <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">per page</span>
+                <span className="text-sm text-muted-foreground">{tc("perPage")}</span>
               </div>
             </div>
           </CardHeader>
@@ -582,8 +585,8 @@ export default function ReportsPage() {
                 <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                   <BarChart3 className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">No trades found</h3>
-                <p className="text-muted-foreground">No trades recorded for the selected period.</p>
+                <h3 className="text-lg font-medium mb-2">{t("noTradesFound")}</h3>
+                <p className="text-muted-foreground">{t("noTradesForPeriod")}</p>
               </div>
             ) : (
               <>
@@ -591,16 +594,16 @@ export default function ReportsPage() {
                   <Table>
                     <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
-                        <TableHead className="min-w-[100px]">Date</TableHead>
-                        <TableHead className="min-w-[120px]">Script</TableHead>
-                        <TableHead className="min-w-[70px]">Type</TableHead>
-                        <TableHead className="text-right min-w-[60px]">Qty</TableHead>
-                        <TableHead className="text-right min-w-[90px]">Buy</TableHead>
-                        <TableHead className="text-right min-w-[90px]">Sell</TableHead>
-                        <TableHead className="text-right min-w-[100px]">P&L</TableHead>
-                        <TableHead className="text-right min-w-[110px]">Net P&L</TableHead>
-                        <TableHead className="text-center min-w-[80px]">Setup</TableHead>
-                        <TableHead className="min-w-[150px]">Remarks</TableHead>
+                        <TableHead className="min-w-[100px]">{t("tableDate")}</TableHead>
+                        <TableHead className="min-w-[120px]">{t("tableScript")}</TableHead>
+                        <TableHead className="min-w-[70px]">{t("tableType")}</TableHead>
+                        <TableHead className="text-right min-w-[60px]">{t("tableQty")}</TableHead>
+                        <TableHead className="text-right min-w-[90px]">{t("tableBuy")}</TableHead>
+                        <TableHead className="text-right min-w-[90px]">{t("tableSell")}</TableHead>
+                        <TableHead className="text-right min-w-[100px]">{t("tablePL")}</TableHead>
+                        <TableHead className="text-right min-w-[110px]">{t("tableNetPL")}</TableHead>
+                        <TableHead className="text-center min-w-[80px]">{t("tableSetup")}</TableHead>
+                        <TableHead className="min-w-[150px]">{t("tableRemarks")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -663,7 +666,7 @@ export default function ReportsPage() {
                 {totalPages > 1 && (
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-4 border-t bg-muted/20">
                     <div className="text-sm text-muted-foreground">
-                      Showing {startIndex + 1} to {Math.min(endIndex, filteredTrades.length)} of {filteredTrades.length} trades
+                      {tc("showing")} {startIndex + 1} {tc("to")} {Math.min(endIndex, filteredTrades.length)} {tc("of")} {filteredTrades.length} {tc("trades")}
                     </div>
                     <div className="flex items-center gap-1">
                       <Button

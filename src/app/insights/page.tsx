@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -166,6 +167,7 @@ const MOOD_CONFIG: { [key: string]: { emoji: string; color: string; bgColor: str
 
 export default function InsightsPage() {
   const { data: session, status } = useSession();
+  const t = useTranslations("insights");
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +180,7 @@ export default function InsightsPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading insights...</p>
+            <p className="text-muted-foreground">{t("loadingInsights")}</p>
           </div>
         </div>
       </div>
@@ -242,9 +244,9 @@ export default function InsightsPage() {
       
       <main className="w-[90%] max-w-[1620px] mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">AI Trading Insights</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground mt-1">
-            Get AI-powered analysis of your trading patterns and personalized recommendations
+            {t("description")}
           </p>
         </div>
 
@@ -257,12 +259,12 @@ export default function InsightsPage() {
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
                 <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
-              AI Trading Analysis
+              {t("aiTradingAnalysis")}
             </CardTitle>
             <CardDescription className="text-base">
               {insights 
-                ? `Last generated: ${formatDate(insights.generatedAt)} • ${tradesAnalyzed} trades analyzed`
-                : "Generate AI-powered insights from your trading data"
+                ? `${t("lastGenerated")}: ${formatDate(insights.generatedAt)} • ${tradesAnalyzed} ${t("tradesAnalyzed")}`
+                : t("generateDescription")
               }
             </CardDescription>
           </CardHeader>
@@ -276,17 +278,17 @@ export default function InsightsPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Analyzing Trades...
+                    {t("analyzingTrades")}
                   </>
                 ) : insights ? (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh Insights
+                    {t("refreshInsights")}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Insights
+                    {t("generateInsights")}
                   </>
                 )}
               </Button>
@@ -294,7 +296,7 @@ export default function InsightsPage() {
               {insights && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  Insights refresh daily or on-demand
+                  {t("insightsRefreshNote")}
                 </div>
               )}
             </div>
@@ -317,8 +319,8 @@ export default function InsightsPage() {
               <div className="h-20 w-20 rounded-full border-4 border-primary/30 animate-pulse" />
               <Brain className="h-10 w-10 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-bounce" />
             </div>
-            <p className="mt-4 text-lg font-medium">Analyzing your trading patterns...</p>
-            <p className="text-muted-foreground">This may take a few seconds</p>
+            <p className="mt-4 text-lg font-medium">{t("analyzingPatterns")}</p>
+            <p className="text-muted-foreground">{t("mayTakeFewSeconds")}</p>
           </div>
         )}
 
@@ -329,10 +331,9 @@ export default function InsightsPage() {
               <div className="absolute inset-0 rounded-2xl bg-primary opacity-20 blur-xl" />
               <Sparkles className="h-12 w-12 text-primary relative" />
             </div>
-            <h3 className="text-2xl font-bold mb-4">Ready to Analyze Your Trades</h3>
+            <h3 className="text-2xl font-bold mb-4">{t("readyToAnalyze")}</h3>
             <p className="text-muted-foreground max-w-md mx-auto mb-8">
-              Click the &quot;Generate Insights&quot; button above to get AI-powered analysis of your trading patterns, 
-              mood correlations, and personalized recommendations.
+              {t("readyToAnalyzeDescription")}
             </p>
           </div>
         )}
@@ -347,9 +348,9 @@ export default function InsightsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-blue-500" />
-                    Mood vs Win Rate
+                    {t("moodVsWinRate")}
                   </CardTitle>
-                  <CardDescription>How your emotional state affects trading success</CardDescription>
+                  <CardDescription>{t("moodVsWinRateDescription")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {moodChartData.length > 0 ? (
@@ -368,16 +369,16 @@ export default function InsightsPage() {
                         <Tooltip 
                           formatter={(value: number, name: string) => [
                             name === "winRate" ? `${value}%` : `₹${value}`,
-                            name === "winRate" ? "Win Rate" : "Avg P&L"
+                            name === "winRate" ? t("winRate") : t("avgPL")
                           ]}
                           labelFormatter={(label) => `${MOOD_CONFIG[label]?.emoji || ""} ${label}`}
                         />
-                        <Bar dataKey="winRate" name="Win Rate" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="winRate" name={t("winRate")} radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                      No mood data available
+                      {t("noMoodData")}
                     </div>
                   )}
                 </CardContent>
@@ -388,9 +389,9 @@ export default function InsightsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5 text-purple-500" />
-                    Trade Distribution by Mood
+                    {t("tradeDistributionByMood")}
                   </CardTitle>
-                  <CardDescription>Breakdown of trades across emotional states</CardDescription>
+                  <CardDescription>{t("tradeDistributionDescription")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {moodDistributionData.length > 0 ? (
@@ -416,7 +417,7 @@ export default function InsightsPage() {
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                      No mood data available
+                      {t("noMoodData")}
                     </div>
                   )}
                 </CardContent>
@@ -427,7 +428,7 @@ export default function InsightsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Trading Psychology */}
               <CollapsibleCard
-                title="Trading Psychology"
+                title={t("tradingPsychology")}
                 icon={Brain}
                 summary={insights.tradingPsychology.summary}
                 iconColor="text-purple-500"
@@ -436,7 +437,7 @@ export default function InsightsPage() {
                 <div className="space-y-4">
                   {insights.tradingPsychology.details.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Key Insights</h4>
+                      <h4 className="font-medium mb-2">{t("keyInsights")}</h4>
                       <ul className="space-y-2">
                         {insights.tradingPsychology.details.map((detail, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -449,7 +450,7 @@ export default function InsightsPage() {
                   )}
                   {insights.tradingPsychology.moodPatterns.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Mood Patterns</h4>
+                      <h4 className="font-medium mb-2">{t("moodPatterns")}</h4>
                       <ul className="space-y-2">
                         {insights.tradingPsychology.moodPatterns.map((pattern, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -465,7 +466,7 @@ export default function InsightsPage() {
 
               {/* Remarks Analysis */}
               <CollapsibleCard
-                title="Remarks Analysis"
+                title={t("remarksAnalysis")}
                 icon={MessageSquare}
                 summary={insights.remarksAnalysis.summary}
                 iconColor="text-blue-500"
@@ -474,7 +475,7 @@ export default function InsightsPage() {
                 <div className="space-y-4">
                   {insights.remarksAnalysis.themes.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Common Themes</h4>
+                      <h4 className="font-medium mb-2">{t("commonThemes")}</h4>
                       <div className="flex flex-wrap gap-2">
                         {insights.remarksAnalysis.themes.map((theme, i) => (
                           <span key={i} className="px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs">
@@ -486,7 +487,7 @@ export default function InsightsPage() {
                   )}
                   {insights.remarksAnalysis.strategies.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Strategies Mentioned</h4>
+                      <h4 className="font-medium mb-2">{t("strategiesMentioned")}</h4>
                       <ul className="space-y-1">
                         {insights.remarksAnalysis.strategies.map((strategy, i) => (
                           <li key={i} className="text-sm text-muted-foreground">• {strategy}</li>
@@ -496,7 +497,7 @@ export default function InsightsPage() {
                   )}
                   {insights.remarksAnalysis.selfReflections.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Self Reflections</h4>
+                      <h4 className="font-medium mb-2">{t("selfReflections")}</h4>
                       <ul className="space-y-1">
                         {insights.remarksAnalysis.selfReflections.map((reflection, i) => (
                           <li key={i} className="text-sm text-muted-foreground italic">&ldquo;{reflection}&rdquo;</li>
@@ -509,7 +510,7 @@ export default function InsightsPage() {
 
               {/* Mood Performance */}
               <CollapsibleCard
-                title="Mood Performance"
+                title={t("moodPerformance")}
                 icon={TrendingUp}
                 summary={insights.moodPerformance.summary}
                 iconColor="text-green-500"
@@ -518,20 +519,20 @@ export default function InsightsPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-green-500/10 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Best Mood</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t("bestMood")}</p>
                       <p className="font-medium text-green-600 dark:text-green-400">
                         {MOOD_CONFIG[insights.moodPerformance.bestMood]?.emoji} {insights.moodPerformance.bestMood}
                       </p>
                     </div>
                     <div className="p-3 bg-red-500/10 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Worst Mood</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t("worstMood")}</p>
                       <p className="font-medium text-red-600 dark:text-red-400">
                         {MOOD_CONFIG[insights.moodPerformance.worstMood]?.emoji} {insights.moodPerformance.worstMood}
                       </p>
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-medium mb-2">Detailed Stats</h4>
+                    <h4 className="font-medium mb-2">{t("detailedStats")}</h4>
                     <div className="space-y-2">
                       {insights.moodPerformance.moodStats.map((stat, i) => (
                         <div key={i} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
@@ -539,7 +540,7 @@ export default function InsightsPage() {
                             {MOOD_CONFIG[stat.mood]?.emoji} {stat.mood}
                           </span>
                           <span className="text-muted-foreground">
-                            {stat.trades} trades • {stat.winRate.toFixed(1)}% WR • ₹{stat.avgPL.toFixed(0)} avg
+                            {stat.trades} {t("trades")} • {stat.winRate.toFixed(1)}% WR • ₹{stat.avgPL.toFixed(0)} {t("avg")}
                           </span>
                         </div>
                       ))}
@@ -550,7 +551,7 @@ export default function InsightsPage() {
 
               {/* Behavioral Warnings */}
               <CollapsibleCard
-                title="Behavioral Warnings"
+                title={t("behavioralWarnings")}
                 icon={AlertTriangle}
                 summary={insights.behavioralWarnings.summary}
                 iconColor={insights.behavioralWarnings.warningCount > 0 ? "text-orange-500" : "text-green-500"}
@@ -573,7 +574,7 @@ export default function InsightsPage() {
                             warning.severity === "medium" ? "text-orange-600" :
                             "text-yellow-600"
                           }`}>
-                            {warning.severity} severity
+                            {warning.severity} {t("severity")}
                           </span>
                         </div>
                         <p className="font-medium text-sm">{warning.type}</p>
@@ -583,7 +584,7 @@ export default function InsightsPage() {
                   ) : (
                     <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                       <CheckCircle className="h-5 w-5" />
-                      <span>No critical behavioral warnings detected!</span>
+                      <span>{t("noWarningsDetected")}</span>
                     </div>
                   )}
                 </div>
@@ -591,7 +592,7 @@ export default function InsightsPage() {
 
               {/* Setup Discipline */}
               <CollapsibleCard
-                title="Setup Discipline"
+                title={t("setupDiscipline")}
                 icon={Shield}
                 summary={insights.setupDiscipline.summary}
                 iconColor="text-cyan-500"
@@ -599,7 +600,7 @@ export default function InsightsPage() {
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm">Setup Adherence Rate</span>
+                    <span className="text-sm">{t("setupAdherenceRate")}</span>
                     <span className={`text-lg font-bold ${
                       insights.setupDiscipline.adherenceRate >= 70 ? "text-green-600" :
                       insights.setupDiscipline.adherenceRate >= 50 ? "text-yellow-600" :
@@ -611,20 +612,20 @@ export default function InsightsPage() {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-green-500/10 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Followed Setup</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t("followedSetup")}</p>
                       <p className="font-medium">{insights.setupDiscipline.followedSetupStats.winRate.toFixed(1)}% WR</p>
-                      <p className="text-sm text-muted-foreground">₹{insights.setupDiscipline.followedSetupStats.avgPL.toFixed(0)} avg</p>
+                      <p className="text-sm text-muted-foreground">₹{insights.setupDiscipline.followedSetupStats.avgPL.toFixed(0)} {t("avg")}</p>
                     </div>
                     <div className="p-3 bg-red-500/10 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Ignored Setup</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t("ignoredSetup")}</p>
                       <p className="font-medium">{insights.setupDiscipline.ignoredSetupStats.winRate.toFixed(1)}% WR</p>
-                      <p className="text-sm text-muted-foreground">₹{insights.setupDiscipline.ignoredSetupStats.avgPL.toFixed(0)} avg</p>
+                      <p className="text-sm text-muted-foreground">₹{insights.setupDiscipline.ignoredSetupStats.avgPL.toFixed(0)} {t("avg")}</p>
                     </div>
                   </div>
 
                   {insights.setupDiscipline.moodCorrelation.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Mood Correlation</h4>
+                      <h4 className="font-medium mb-2">{t("moodCorrelation")}</h4>
                       <ul className="space-y-1">
                         {insights.setupDiscipline.moodCorrelation.map((correlation, i) => (
                           <li key={i} className="text-sm text-muted-foreground">• {correlation}</li>
@@ -637,7 +638,7 @@ export default function InsightsPage() {
 
               {/* Recommendations */}
               <CollapsibleCard
-                title="Personalized Recommendations"
+                title={t("personalizedRecommendations")}
                 icon={Lightbulb}
                 summary={insights.recommendations.summary}
                 iconColor="text-amber-500"
@@ -646,7 +647,7 @@ export default function InsightsPage() {
               >
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-3">Top Tips</h4>
+                    <h4 className="font-medium mb-3">{t("topTips")}</h4>
                     <div className="space-y-2">
                       {insights.recommendations.topTips.map((tip, i) => (
                         <div key={i} className="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg">
@@ -661,7 +662,7 @@ export default function InsightsPage() {
 
                   {insights.recommendations.detailedAdvice.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Detailed Advice</h4>
+                      <h4 className="font-medium mb-2">{t("detailedAdvice")}</h4>
                       <div className="space-y-3">
                         {insights.recommendations.detailedAdvice.map((advice, i) => (
                           <div key={i} className="border-l-2 border-amber-500 pl-3">

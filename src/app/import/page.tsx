@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ const DB_FIELDS = [
 export default function ImportPage() {
   const { status } = useSession();
   const { toast } = useToast();
+  const t = useTranslations("importPage");
+  const tc = useTranslations("common");
   const [file, setFile] = useState<File | null>(null);
   const [columns, setColumns] = useState<CSVColumn[]>([]);
   const [csvData, setCSVData] = useState<string[][]>([]);
@@ -54,7 +57,7 @@ export default function ImportPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">{tc("loading")}</p>
           </div>
         </div>
       </div>
@@ -129,8 +132,8 @@ export default function ImportPage() {
 
     if (!isCSV && !isExcel) {
       toast({
-        title: "Invalid File",
-        description: "Please upload a CSV or Excel (.xlsx, .xls) file",
+        title: t("invalidFile"),
+        description: t("invalidFileDescription"),
         variant: "destructive",
       });
       return;
@@ -159,8 +162,8 @@ export default function ImportPage() {
 
           if (jsonData.length < 2) {
             toast({
-              title: "Invalid Excel File",
-              description: "File must have at least a header row and one data row",
+              title: t("invalidExcelFile"),
+              description: t("invalidExcelFileDescription"),
               variant: "destructive",
             });
             return;
@@ -175,8 +178,8 @@ export default function ImportPage() {
         } catch (error) {
           console.error("Excel parsing error:", error);
           toast({
-            title: "Error Reading Excel File",
-            description: "Failed to parse the Excel file. Please check the file format.",
+            title: t("errorReadingExcel"),
+            description: t("errorReadingExcelDescription"),
             variant: "destructive",
           });
         }
@@ -191,8 +194,8 @@ export default function ImportPage() {
         
         if (lines.length < 2) {
           toast({
-            title: "Invalid CSV",
-            description: "CSV must have at least a header row and one data row",
+            title: t("invalidCSV"),
+            description: t("invalidCSVDescription"),
             variant: "destructive",
           });
           return;
@@ -306,8 +309,8 @@ export default function ImportPage() {
       const missingFields = requiredFields.filter(field => !mappedFields.includes(field));
       if (missingFields.length > 0) {
         toast({
-          title: "Missing Required Fields",
-          description: `Please map: ${missingFields.join(", ")}`,
+          title: t("missingRequiredFields"),
+          description: `${t("pleaseMap")}: ${missingFields.join(", ")}`,
           variant: "destructive",
         });
         setImporting(false);
@@ -382,14 +385,14 @@ export default function ImportPage() {
       setStep("complete");
 
       toast({
-        title: "Import Complete",
-        description: `Successfully imported ${successCount} trades. ${failedCount} failed.`,
+        title: t("importComplete"),
+        description: `${t("successfullyImported")} ${successCount} ${tc("trades")}. ${failedCount} ${t("failed")}.`,
       });
     } catch (error) {
       console.error("Import error:", error);
       toast({
-        title: "Import Failed",
-        description: "An error occurred during import",
+        title: t("importFailed"),
+        description: t("importError"),
         variant: "destructive",
       });
     } finally {
@@ -411,9 +414,9 @@ export default function ImportPage() {
       
       <main className="w-[90%] max-w-[1620px] mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Import Trades</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground mt-1">
-            Upload your CSV or Excel file and we&apos;ll automatically map the columns
+            {t("description")}
           </p>
         </div>
 
@@ -424,10 +427,10 @@ export default function ImportPage() {
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
                   <FileSpreadsheet className="h-5 w-5 text-white" />
                 </div>
-                Upload File
+                {t("uploadFile")}
               </CardTitle>
               <CardDescription>
-                Upload your trading journal file. We&apos;ll automatically detect and map the columns.
+                {t("uploadDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -440,10 +443,10 @@ export default function ImportPage() {
                     <FileUp className="h-8 w-8 text-primary" />
                   </div>
                   <div className="text-lg font-medium mb-2">
-                    Click to upload or drag and drop
+                    {t("clickToUpload")}
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    CSV or Excel files (.csv, .xlsx, .xls)
+                    {t("acceptedFormats")}
                   </p>
                   <Input
                     id="csv-upload"
@@ -453,24 +456,24 @@ export default function ImportPage() {
                     className="hidden"
                   />
                   <Button type="button" variant="outline" className="pointer-events-none">
-                    Select File
+                    {t("selectFile")}
                   </Button>
                 </div>
 
                 <div className="bg-muted/50 rounded-xl p-6">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-primary" />
-                    Expected Columns
+                    {t("expectedColumns")}
                   </h3>
                   <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Trade Date</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Script/Symbol</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Buy/Sell Type</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Quantity</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Entry Price</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Exit Price</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />Profit/Loss</div>
-                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />Follow Setup (Optional)</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnTradeDate")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnScript")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnBuySell")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnQuantity")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnEntryPrice")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnExitPrice")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-primary" />{t("columnProfitLoss")}</div>
+                    <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />{t("columnFollowSetup")}</div>
                   </div>
                 </div>
               </div>
@@ -481,18 +484,18 @@ export default function ImportPage() {
         {step === "map" && (
           <Card className="max-w-3xl mx-auto overflow-hidden border-0 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-blue-600/10 to-purple-600/10">
-              <CardTitle>Map CSV Columns</CardTitle>
+              <CardTitle>{t("mapColumns")}</CardTitle>
               <CardDescription>
-                Review and adjust the column mappings. We&apos;ve automatically detected them for you.
+                {t("mapColumnsDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm bg-muted/50 rounded-lg px-4 py-3">
                   <FileSpreadsheet className="h-4 w-4 text-primary" />
-                  <span className="text-muted-foreground">File:</span>
+                  <span className="text-muted-foreground">{t("file")}:</span>
                   <span className="font-medium">{file?.name}</span>
-                  <span className="text-muted-foreground">({csvData.length} rows)</span>
+                  <span className="text-muted-foreground">({csvData.length} {t("rows")})</span>
                 </div>
 
                 <div className="space-y-3">
@@ -501,7 +504,7 @@ export default function ImportPage() {
                       <div>
                         <div className="font-medium">{column.name}</div>
                         <div className="text-sm text-muted-foreground truncate">
-                          Sample: {column.sample || "N/A"}
+                          {t("sample")}: {column.sample || "N/A"}
                         </div>
                       </div>
                       <div className="md:col-span-2">
@@ -534,17 +537,17 @@ export default function ImportPage() {
                     {importing ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Importing...
+                        {t("importing")}
                       </>
                     ) : (
                       <>
                         <Upload className="h-4 w-4 mr-2" />
-                        Import {csvData.length} Trades
+                        {t("importTrades", { count: csvData.length })}
                       </>
                     )}
                   </Button>
                   <Button onClick={resetImport} variant="outline" disabled={importing}>
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                 </div>
               </div>
@@ -559,7 +562,7 @@ export default function ImportPage() {
                 <div className="h-10 w-10 rounded-xl bg-green-500 flex items-center justify-center">
                   <CheckCircle2 className="h-5 w-5 text-white" />
                 </div>
-                Import Complete
+                {t("importComplete")}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -569,14 +572,14 @@ export default function ImportPage() {
                     <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                       {importResult.success}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">Successfully Imported</div>
+                    <div className="text-sm text-muted-foreground mt-1">{t("successfullyImported")}</div>
                   </div>
                   {importResult.failed > 0 && (
                     <div className="p-6 bg-red-500/10 rounded-xl border border-red-500/20 text-center">
                       <div className="text-3xl font-bold text-red-600 dark:text-red-400">
                         {importResult.failed}
                       </div>
-                      <div className="text-sm text-muted-foreground mt-1">Failed to Import</div>
+                      <div className="text-sm text-muted-foreground mt-1">{t("failedToImport")}</div>
                     </div>
                   )}
                 </div>
@@ -586,10 +589,10 @@ export default function ImportPage() {
                     onClick={() => redirect("/intraday")} 
                     className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
-                    View Trades
+                    {t("viewTrades")}
                   </Button>
                   <Button onClick={resetImport} variant="outline">
-                    Import Another File
+                    {t("importAnotherFile")}
                   </Button>
                 </div>
               </div>

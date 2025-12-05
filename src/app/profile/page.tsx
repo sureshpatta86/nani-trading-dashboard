@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { User, Lock, Save, Loader2, CheckCircle2, AlertCircle, Wallet, Shield } 
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const t = useTranslations("profile");
+  const tc = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -71,14 +74,14 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Profile updated successfully!" });
+        setMessage({ type: "success", text: t("profileUpdated") });
         // Update session with new data
         await update({ name: profileData.name });
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to update profile" });
+        setMessage({ type: "error", text: data.error || t("updateFailed") });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "An error occurred. Please try again." });
+      setMessage({ type: "error", text: t("errorOccurred") });
     } finally {
       setIsLoading(false);
     }
@@ -90,13 +93,13 @@ export default function ProfilePage() {
     setMessage(null);
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: "error", text: "New passwords do not match" });
+      setMessage({ type: "error", text: t("passwordsDoNotMatch") });
       setIsLoading(false);
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setMessage({ type: "error", text: "Password must be at least 6 characters" });
+      setMessage({ type: "error", text: t("passwordTooShort") });
       setIsLoading(false);
       return;
     }
@@ -114,17 +117,17 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Password changed successfully!" });
+        setMessage({ type: "success", text: t("passwordChanged") });
         setPasswordData({
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to change password" });
+        setMessage({ type: "error", text: data.error || t("changePasswordFailed") });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "An error occurred. Please try again." });
+      setMessage({ type: "error", text: t("errorOccurred") });
     } finally {
       setIsLoading(false);
     }
@@ -137,7 +140,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading profile...</p>
+            <p className="text-muted-foreground">{t("loadingProfile")}</p>
           </div>
         </div>
       </div>
@@ -151,9 +154,9 @@ export default function ProfilePage() {
       <main className="w-[90%] max-w-[1620px] mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your account details and security settings
+              {t("description")}
             </p>
           </div>
 
@@ -182,16 +185,16 @@ export default function ProfilePage() {
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
                   <User className="h-5 w-5 text-white" />
                 </div>
-                Profile Information
+                {t("profileInformation")}
               </CardTitle>
               <CardDescription>
-                Update your account details
+                {t("updateAccountDetails")}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">{t("fullName")}</Label>
                   <Input
                     id="name"
                     type="text"
@@ -203,7 +206,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t("emailAddress")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -212,14 +215,14 @@ export default function ProfilePage() {
                     className="h-11 bg-muted cursor-not-allowed"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Email cannot be changed
+                    {t("emailCannotBeChanged")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="initialCapital" className="flex items-center gap-2">
                     <Wallet className="h-4 w-4 text-muted-foreground" />
-                    Initial Trading Capital (₹)
+                    {t("initialCapital")}
                   </Label>
                   <Input
                     id="initialCapital"
@@ -232,7 +235,7 @@ export default function ProfilePage() {
                     className="h-11"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Your starting capital for intraday trading
+                    {t("initialCapitalDescription")}
                   </p>
                 </div>
 
@@ -246,7 +249,7 @@ export default function ProfilePage() {
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  Save Changes
+                  {tc("saveChanges")}
                 </Button>
               </form>
             </CardContent>
@@ -260,16 +263,16 @@ export default function ProfilePage() {
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center">
                     <Lock className="h-5 w-5 text-white" />
                   </div>
-                  Change Password
+                  {t("changePassword")}
                 </CardTitle>
                 <CardDescription>
-                  Update your password to keep your account secure
+                  {t("changePasswordDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Label htmlFor="currentPassword">{t("currentPassword")}</Label>
                     <Input
                       id="currentPassword"
                       type="password"
@@ -284,7 +287,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
+                    <Label htmlFor="newPassword">{t("newPassword")}</Label>
                     <Input
                       id="newPassword"
                       type="password"
@@ -298,12 +301,12 @@ export default function ProfilePage() {
                       className="h-11"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Must be at least 6 characters
+                      {t("passwordMinLength")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword">{t("confirmNewPassword")}</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
@@ -328,7 +331,7 @@ export default function ProfilePage() {
                     ) : (
                       <Lock className="h-4 w-4 mr-2" />
                     )}
-                    Change Password
+                    {t("changePassword")}
                   </Button>
                 </form>
               </CardContent>
@@ -340,12 +343,12 @@ export default function ProfilePage() {
               <CardHeader className="bg-muted/30">
                 <CardTitle className="flex items-center gap-3 text-lg">
                   <Shield className="h-5 w-5 text-muted-foreground" />
-                  Password
+                  {t("password")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">
-                  You signed in with Google OAuth. Password management is not available for OAuth accounts.
+                  {t("oauthPasswordNote")}
                 </p>
               </CardContent>
             </Card>

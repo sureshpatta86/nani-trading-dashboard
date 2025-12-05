@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RiskRewardCalculator } from "@/components/tools/risk-reward-calculator";
@@ -19,6 +20,8 @@ import {
 
 export default function ToolsPage() {
   const { status } = useSession();
+  const t = useTranslations("tools");
+  const tc = useTranslations("common");
 
   if (status === "loading") {
     return (
@@ -27,7 +30,7 @@ export default function ToolsPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading tools...</p>
+            <p className="text-muted-foreground">{tc("loading")}</p>
           </div>
         </div>
       </div>
@@ -49,10 +52,10 @@ export default function ToolsPage() {
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
               <Wrench className="h-5 w-5 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Trading Tools</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           </div>
           <p className="text-muted-foreground mt-1">
-            Professional calculators to help you make informed trading decisions
+            {t("description")}
           </p>
         </div>
 
@@ -61,23 +64,23 @@ export default function ToolsPage() {
           <TabsList className="flex flex-wrap h-auto gap-1 p-1.5">
             <TabsTrigger value="risk-reward" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Target className="h-4 w-4" />
-              <span className="hidden sm:inline">Risk/Reward</span>
+              <span className="hidden sm:inline">{t("riskReward")}</span>
               <span className="sm:hidden">R/R</span>
             </TabsTrigger>
             <TabsTrigger value="pl-calculator" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Calculator className="h-4 w-4" />
-              <span className="hidden sm:inline">P&L Calculator</span>
+              <span className="hidden sm:inline">{t("plCalculator")}</span>
               <span className="sm:hidden">P&L</span>
             </TabsTrigger>
             <TabsTrigger value="position-sizing" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Scale className="h-4 w-4" />
-              <span className="hidden sm:inline">Position Sizing</span>
-              <span className="sm:hidden">Position</span>
+              <span className="hidden sm:inline">{t("positionSizing")}</span>
+              <span className="sm:hidden">{tc("position")}</span>
             </TabsTrigger>
             <TabsTrigger value="lot-size" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
               <Layers className="h-4 w-4" />
-              <span className="hidden sm:inline">Lot Size</span>
-              <span className="sm:hidden">Lots</span>
+              <span className="hidden sm:inline">{t("lotSize")}</span>
+              <span className="sm:hidden">{tc("lots")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -100,23 +103,23 @@ export default function ToolsPage() {
 
         {/* Footer Info */}
         <div className="mt-12 p-6 rounded-xl bg-muted/30 border border-border/50">
-          <h3 className="text-lg font-semibold mb-3">About These Tools</h3>
+          <h3 className="text-lg font-semibold mb-3">{t("aboutTheseTools")}</h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm text-muted-foreground">
             <div>
-              <p className="font-medium text-foreground mb-1">Risk/Reward Calculator</p>
-              <p>Calculate the risk-to-reward ratio for any trade to ensure you&apos;re taking trades with favorable odds.</p>
+              <p className="font-medium text-foreground mb-1">{t("riskRewardCalculator")}</p>
+              <p>{t("riskRewardDescription")}</p>
             </div>
             <div>
-              <p className="font-medium text-foreground mb-1">P&L Calculator</p>
-              <p>Calculate your profit or loss including all trading charges like brokerage, STT, and GST.</p>
+              <p className="font-medium text-foreground mb-1">{t("plCalculatorTitle")}</p>
+              <p>{t("plCalculatorDescription")}</p>
             </div>
             <div>
-              <p className="font-medium text-foreground mb-1">Position Sizing</p>
-              <p>Determine the optimal number of shares to buy based on your account size and risk tolerance.</p>
+              <p className="font-medium text-foreground mb-1">{t("positionSizingTitle")}</p>
+              <p>{t("positionSizingDescription")}</p>
             </div>
             <div>
-              <p className="font-medium text-foreground mb-1">Lot Size Calculator</p>
-              <p>Calculate the number of lots to trade in F&O based on your risk amount and stop loss.</p>
+              <p className="font-medium text-foreground mb-1">{t("lotSizeCalculator")}</p>
+              <p>{t("lotSizeDescription")}</p>
             </div>
           </div>
         </div>

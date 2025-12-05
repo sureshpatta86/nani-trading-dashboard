@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
@@ -55,6 +56,8 @@ interface Stats {
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
+  const t = useTranslations("dashboard");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<Stats>({
@@ -175,7 +178,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse" />
             <Loader2 className="h-12 w-12 animate-spin text-primary relative" />
           </div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-muted-foreground">{tc("loading")}</p>
         </div>
       </div>
     );
@@ -193,10 +196,10 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h2 className="text-3xl font-bold mb-2">
-                  Welcome back, {session?.user?.name || "Trader"}! 👋
+                  {t("welcome", { name: session?.user?.name || t("trader") })} 👋
                 </h2>
                 <p className="text-primary-foreground/80 max-w-xl">
-                  Track your trades, analyze performance, and get AI-powered insights to improve your trading strategy.
+                  {t("welcomeDescription")}
                 </p>
               </div>
               <Button 
@@ -210,7 +213,7 @@ export default function DashboardPage() {
                 ) : (
                   <RefreshCw className="h-4 w-4 mr-2" />
                 )}
-                Refresh Prices
+                {t("refreshPrices")}
               </Button>
             </div>
           </div>
@@ -221,7 +224,7 @@ export default function DashboardPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total P&L</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalPL")}</CardTitle>
               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                 <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -232,7 +235,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                 <BarChart3 className="h-3 w-3" />
-                {stats.totalTrades} total trades
+                {t("totalTrades", { count: stats.totalTrades })}
               </p>
             </CardContent>
           </Card>
@@ -240,7 +243,7 @@ export default function DashboardPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("winRate")}</CardTitle>
               <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                 <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
@@ -260,7 +263,7 @@ export default function DashboardPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-amber-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Profit Factor</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("profitFactor")}</CardTitle>
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                 <Award className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
@@ -272,7 +275,7 @@ export default function DashboardPage() {
                   : stats.profitFactor.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.profitFactor > 2 ? "🔥 Excellent" : stats.profitFactor > 1 ? "✓ Good" : "⚠️ Needs work"}
+                {stats.profitFactor > 2 ? t("excellent") : stats.profitFactor > 1 ? t("good") : t("needsWork")}
               </p>
             </CardContent>
           </Card>
@@ -280,7 +283,7 @@ export default function DashboardPage() {
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-500/10 via-card to-card">
             <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -mr-10 -mt-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Setup Adherence</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("setupAdherence")}</CardTitle>
               <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                 <PieChart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
@@ -290,7 +293,7 @@ export default function DashboardPage() {
                 {stats.setupAdherence.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Following your plan
+                {t("followingPlan")}
               </p>
             </CardContent>
           </Card>
@@ -305,7 +308,7 @@ export default function DashboardPage() {
                 <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
                   <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                Best Trade
+                {t("bestTrade")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -313,7 +316,7 @@ export default function DashboardPage() {
                 {formatINR(stats.bestTrade)}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Your most profitable trade
+                {t("mostProfitable")}
               </p>
             </CardContent>
           </Card>
@@ -325,7 +328,7 @@ export default function DashboardPage() {
                 <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
                   <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
                 </div>
-                Worst Trade
+                {t("worstTrade")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -333,27 +336,27 @@ export default function DashboardPage() {
                 {formatINR(stats.worstTrade)}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Biggest loss - learn from it
+                {t("biggestLoss")}
               </p>
             </CardContent>
           </Card>
 
           <Card className="group relative overflow-hidden bg-gradient-to-br from-primary/5 via-card to-card">
             <CardHeader>
-              <CardTitle className="text-lg">Portfolio Overview</CardTitle>
-              <CardDescription>Your long-term investments</CardDescription>
+              <CardTitle className="text-lg">{t("portfolioOverview")}</CardTitle>
+              <CardDescription>{t("longTermInvestments")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Total Value</p>
+                  <p className="text-sm text-muted-foreground">{t("totalValue")}</p>
                   <p className="text-xl font-bold">
                     {formatINR(stats.portfolioValue)}
                   </p>
                 </div>
                 <div className="h-px bg-border" />
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Unrealized P&L</p>
+                  <p className="text-sm text-muted-foreground">{t("unrealizedPL")}</p>
                   <p className={`text-xl font-bold flex items-center gap-1 ${getPLColor(stats.portfolioPL)}`}>
                     {stats.portfolioPL >= 0 ? (
                       <TrendingUp className="h-4 w-4" />

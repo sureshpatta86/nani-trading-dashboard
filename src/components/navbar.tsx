@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,33 +32,35 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSelector } from "@/components/language-selector";
 import { useState } from "react";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Intraday", href: "/intraday", icon: TrendingUp },
-  { name: "Portfolio", href: "/portfolio", icon: Briefcase },
-  { name: "Reports", href: "/reports", icon: FileBarChart },
-  { name: "Import", href: "/import", icon: Upload },
-  { name: "AI Insights", href: "/insights", icon: Sparkles },
+const navigationItems = [
+  { nameKey: "dashboard", href: "/", icon: LayoutDashboard },
+  { nameKey: "intraday", href: "/intraday", icon: TrendingUp },
+  { nameKey: "portfolio", href: "/portfolio", icon: Briefcase },
+  { nameKey: "reports", href: "/reports", icon: FileBarChart },
+  { nameKey: "import", href: "/import", icon: Upload },
+  { nameKey: "insights", href: "/insights", icon: Sparkles },
 ];
 
-const screeners = [
+const screenerItems = [
   {
-    name: "Swing Screener",
+    nameKey: "swingScreener",
     href: "https://chartink.com/screener/fin-viraj-swing-trading-n",
-    description: "Swing trading opportunities",
+    descriptionKey: "swingDescription",
   },
   {
-    name: "Long Term Screener",
+    nameKey: "longTermScreener",
     href: "https://chartink.com/screener/weekly-long-term-suresh",
-    description: "Weekly long-term picks",
+    descriptionKey: "longTermDescription",
   },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const t = useTranslations("nav");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const isToolsActive = pathname === "/tools";
@@ -75,18 +78,18 @@ export function Navbar() {
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold leading-tight">Trading Journal</span>
-                <span className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">with AI</span>
+                <span className="text-lg font-bold leading-tight">{t("brandName")}</span>
+                <span className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">{t("brandTagline")}</span>
               </div>
             </Link>
 
             <div className="hidden lg:flex items-center space-x-1">
-              {navigation.map((item) => {
+              {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
                   <Link
-                    key={item.name}
+                    key={item.nameKey}
                     href={item.href}
                     className={cn(
                       "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
@@ -96,7 +99,7 @@ export function Navbar() {
                     )}
                   >
                     <Icon className={cn("h-4 w-4", isActive && "text-primary")} />
-                    {item.name}
+                    {t(item.nameKey)}
                   </Link>
                 );
               })}
@@ -114,28 +117,28 @@ export function Navbar() {
                     )}
                   >
                     <Wrench className={cn("h-4 w-4", isToolsActive && "text-primary")} />
-                    Tools
+                    {t("tools")}
                     <ChevronDown className="h-3 w-3 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <Calculator className="h-4 w-4 text-primary" />
-                    Trading Tools
+                    {t("tradingTools")}
                   </DropdownMenuLabel>
                   <DropdownMenuItem asChild>
                     <Link href="/tools" className="cursor-pointer">
                       <Wrench className="h-4 w-4 mr-2" />
-                      Calculators
+                      {t("calculators")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <Search className="h-4 w-4 text-primary" />
-                    Screeners
+                    {t("screeners")}
                   </DropdownMenuLabel>
-                  {screeners.map((screener) => (
-                    <DropdownMenuItem key={screener.name} asChild>
+                  {screenerItems.map((screener) => (
+                    <DropdownMenuItem key={screener.nameKey} asChild>
                       <a
                         href={screener.href}
                         target="_blank"
@@ -144,7 +147,7 @@ export function Navbar() {
                       >
                         <span className="flex items-center">
                           <TrendingUp className="h-4 w-4 mr-2" />
-                          {screener.name}
+                          {t(screener.nameKey)}
                         </span>
                         <ExternalLink className="h-3 w-3 opacity-50" />
                       </a>
@@ -156,6 +159,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
+            <LanguageSelector />
             <ThemeToggle />
             
             {/* Mobile menu button */}
@@ -192,7 +196,7 @@ export function Navbar() {
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {session.user.name || "User"}
+                        {session.user.name || t("user")}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {session.user.email}
@@ -203,7 +207,7 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer">
                       <Settings className="h-4 w-4 mr-2" />
-                      Profile Settings
+                      {t("profileSettings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -212,7 +216,7 @@ export function Navbar() {
                     className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    {t("signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -224,12 +228,12 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border/40">
             <div className="flex flex-col space-y-1">
-              {navigation.map((item) => {
+              {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
                   <Link
-                    key={item.name}
+                    key={item.nameKey}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
@@ -240,7 +244,7 @@ export function Navbar() {
                     )}
                   >
                     <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                    {item.name}
+                    {t(item.nameKey)}
                   </Link>
                 );
               })}
@@ -258,7 +262,7 @@ export function Navbar() {
                 >
                   <span className="flex items-center gap-3">
                     <Wrench className={cn("h-5 w-5", isToolsActive && "text-primary")} />
-                    Tools
+                    {t("tools")}
                   </span>
                   <ChevronRight className={cn("h-4 w-4 transition-transform", mobileToolsOpen && "rotate-90")} />
                 </button>
@@ -276,16 +280,16 @@ export function Navbar() {
                       )}
                     >
                       <Calculator className="h-4 w-4" />
-                      Calculators
+                      {t("calculators")}
                     </Link>
                     
                     <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Screeners
+                      {t("screeners")}
                     </div>
                     
-                    {screeners.map((screener) => (
+                    {screenerItems.map((screener) => (
                       <a
-                        key={screener.name}
+                        key={screener.nameKey}
                         href={screener.href}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -294,7 +298,7 @@ export function Navbar() {
                       >
                         <span className="flex items-center gap-3">
                           <Search className="h-4 w-4" />
-                          {screener.name}
+                          {t(screener.nameKey)}
                         </span>
                         <ExternalLink className="h-3 w-3 opacity-50" />
                       </a>

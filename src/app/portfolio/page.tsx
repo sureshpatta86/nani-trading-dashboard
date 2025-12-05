@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,8 @@ export default function PortfolioPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("portfolio");
+  const tc = useTranslations("common");
   const [stocks, setStocks] = useState<PortfolioStock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,22 +96,22 @@ export default function PortfolioPage() {
         const data = await response.json();
         setStocks(data);
         toast({
-          title: "Prices Updated",
-          description: "Stock prices have been refreshed successfully.",
+          title: t("pricesUpdated"),
+          description: t("pricesUpdatedDesc"),
         });
       } else {
         const error = await response.json();
         toast({
-          title: "Failed to Refresh Prices",
-          description: error.error || "Unable to fetch stock prices. Please try again.",
+          title: t("failedRefresh"),
+          description: error.error || tc("errorTryAgain"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to refresh prices:", error);
       toast({
-        title: "Error",
-        description: "Failed to refresh prices. Check console for details.",
+        title: tc("error"),
+        description: tc("errorTryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -167,7 +170,7 @@ export default function PortfolioPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this stock from your portfolio?")) return;
+    if (!confirm(t("confirmDelete"))) return;
 
     try {
       const response = await fetch(`/api/portfolio?id=${id}`, {
@@ -177,11 +180,11 @@ export default function PortfolioPage() {
       if (response.ok) {
         await fetchPortfolio();
       } else {
-        alert("Failed to delete stock");
+        alert(tc("deleteFailed"));
       }
     } catch (error) {
       console.error("Failed to delete stock:", error);
-      alert("Failed to delete stock");
+      alert(tc("deleteFailed"));
     }
   };
 
@@ -320,8 +323,8 @@ export default function PortfolioPage() {
     if (successCount > 0) {
       await fetchPortfolio();
       toast({
-        title: "Import Successful",
-        description: `Imported ${successCount} stock(s) successfully.`,
+        title: t("importSuccess"),
+        description: t("importSuccessDesc", { count: successCount }),
       });
     }
 
@@ -335,7 +338,7 @@ export default function PortfolioPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading portfolio...</p>
+            <p className="text-muted-foreground">{t("loading")}</p>
           </div>
         </div>
       </div>
@@ -357,8 +360,8 @@ export default function PortfolioPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Portfolio Management</h1>
-            <p className="text-muted-foreground mt-1">Track your long-term investments</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="text-muted-foreground mt-1">{t("description")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -368,37 +371,37 @@ export default function PortfolioPage() {
                   setEditingId(null);
                 }}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Stock
+                  {t("addStock")}
                 </Button>
               </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingId ? "Edit Stock" : "Add New Stock"}</DialogTitle>
+                <DialogTitle>{editingId ? t("editStock") : t("addNewStock")}</DialogTitle>
                 <DialogDescription>
-                  Enter your portfolio stock details
+                  {t("enterStockDetails")}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="symbol">Stock Symbol *</Label>
+                    <Label htmlFor="symbol">{t("stockSymbol")} *</Label>
                     <Input
                       id="symbol"
-                      placeholder="e.g., RELIANCE.NS, TCS.NS"
+                      placeholder={t("stockSymbolPlaceholder")}
                       value={formData.symbol}
                       onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      Add .NS for NSE or .BO for BSE (e.g., RELIANCE.NS)
+                      {t("stockSymbolHint")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="name">Stock Name (Optional)</Label>
+                    <Label htmlFor="name">{t("stockName")}</Label>
                     <Input
                       id="name"
-                      placeholder="e.g., Reliance Industries"
+                      placeholder={t("stockNamePlaceholder")}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
@@ -407,7 +410,7 @@ export default function PortfolioPage() {
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity *</Label>
+                    <Label htmlFor="quantity">{t("quantity")} *</Label>
                     <Input
                       id="quantity"
                       type="number"
@@ -419,7 +422,7 @@ export default function PortfolioPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buyPrice">Buy Price *</Label>
+                    <Label htmlFor="buyPrice">{t("buyPrice")} *</Label>
                     <Input
                       id="buyPrice"
                       type="number"
@@ -432,7 +435,7 @@ export default function PortfolioPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="purchaseDate">Purchase Date *</Label>
+                    <Label htmlFor="purchaseDate">{t("purchaseDate")} *</Label>
                     <Input
                       id="purchaseDate"
                       type="date"
@@ -446,7 +449,7 @@ export default function PortfolioPage() {
                 {formData.quantity && formData.buyPrice && (
                   <div className="p-4 bg-muted rounded-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <span>Total Investment:</span>
+                      <span>{t("totalInvestmentLabel")}:</span>
                       <span className="font-bold">
                         ₹{(parseFloat(formData.quantity) * parseFloat(formData.buyPrice)).toFixed(2)}
                       </span>
@@ -456,10 +459,10 @@ export default function PortfolioPage() {
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : editingId ? "Update Stock" : "Add Stock"}
+                    {isSubmitting ? tc("saving") : editingId ? t("updateStock") : t("addStock")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -471,15 +474,15 @@ export default function PortfolioPage() {
             disabled={isRefreshing || stocks.length === 0}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            Refresh Prices
+            {t("refreshPrices")}
           </Button>
           <Button onClick={() => setImportDialogOpen(true)} variant="outline">
             <Upload className="mr-2 h-4 w-4" />
-            Import CSV
+            {t("importCSV")}
           </Button>
           <Button onClick={exportToCSV} variant="outline" disabled={stocks.length === 0}>
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {t("exportCSV")}
           </Button>
         </div>
       </div>
@@ -496,8 +499,8 @@ export default function PortfolioPage() {
           "Buy Price",
           "Purchase Date",
         ]}
-        title="Import Portfolio Stocks"
-        description="Upload a CSV file to import multiple stocks at once. Date format should be DD/MM/YYYY. Symbol should include .NS or .BO suffix."
+        title={t("importPortfolio")}
+        description={t("importDescription")}
         templateExample={`Symbol,Name,Quantity,Buy Price,Purchase Date
 RELIANCE.NS,Reliance Industries,100,2500.00,15/11/2025
 TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
@@ -508,13 +511,13 @@ TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-indigo-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Stocks</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalStocks")}</CardTitle>
             <Briefcase className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stocks.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              <span className="text-green-600 dark:text-green-400">{gainers} gainers</span> / <span className="text-red-600 dark:text-red-400">{losers} losers</span>
+              <span className="text-green-600 dark:text-green-400">{gainers} {t("gainers")}</span> / <span className="text-red-600 dark:text-red-400">{losers} {t("losers")}</span>
             </p>
           </CardContent>
         </Card>
@@ -522,31 +525,31 @@ TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Invested Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("investedValue")}</CardTitle>
             <Wallet className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{totalInvested.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-            <p className="text-xs text-muted-foreground mt-1">Total investment</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("totalInvestment")}</p>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Current Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("currentValue")}</CardTitle>
             <PieChart className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{totalCurrent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-            <p className="text-xs text-muted-foreground mt-1">Market value</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("marketValue")}</p>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-500/10 via-card to-card">
           <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full -mr-8 -mt-8" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total P&L</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("totalPL")}</CardTitle>
             {totalPL >= 0 ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
           </CardHeader>
           <CardContent>
@@ -563,8 +566,8 @@ TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
       {/* Portfolio Table */}
       <Card className="overflow-hidden">
         <CardHeader className="bg-muted/30">
-          <CardTitle className="text-lg">Your Portfolio</CardTitle>
-          <CardDescription>Current holdings and performance</CardDescription>
+          <CardTitle className="text-lg">{t("yourPortfolio")}</CardTitle>
+          <CardDescription>{t("currentHoldings")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {stocks.length === 0 ? (
@@ -572,25 +575,25 @@ TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
               <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <Briefcase className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium mb-2">No stocks in portfolio</h3>
-              <p className="text-muted-foreground mb-4">Click &quot;Add Stock&quot; button above to get started!</p>
+              <h3 className="text-lg font-medium mb-2">{t("noStocks")}</h3>
+              <p className="text-muted-foreground mb-4">{t("noStocksHint")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">Buy Price</TableHead>
-                    <TableHead className="text-right">Current Price</TableHead>
-                    <TableHead className="text-right">Invested</TableHead>
-                    <TableHead className="text-right">Current Value</TableHead>
-                    <TableHead className="text-right">P&L</TableHead>
-                    <TableHead className="text-right">P&L %</TableHead>
-                    <TableHead>Purchase Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t("tableSymbol")}</TableHead>
+                    <TableHead>{t("tableName")}</TableHead>
+                    <TableHead className="text-right">{t("tableQty")}</TableHead>
+                    <TableHead className="text-right">{t("tableBuyPrice")}</TableHead>
+                    <TableHead className="text-right">{t("tableCurrentPrice")}</TableHead>
+                    <TableHead className="text-right">{t("tableInvested")}</TableHead>
+                    <TableHead className="text-right">{t("tableCurrentValue")}</TableHead>
+                    <TableHead className="text-right">{t("tablePL")}</TableHead>
+                    <TableHead className="text-right">{t("tablePLPercent")}</TableHead>
+                    <TableHead>{t("tablePurchaseDate")}</TableHead>
+                    <TableHead className="text-right">{t("tableActions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

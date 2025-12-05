@@ -3,14 +3,18 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Chrome, TrendingUp, LineChart, Brain, Shield, Zap, Mail, Lock, User } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSelector } from "@/components/language-selector";
 
 export default function SignIn() {
   const router = useRouter();
+  const t = useTranslations("auth");
+  const tc = useTranslations("common");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -153,7 +157,8 @@ export default function SignIn() {
       {/* Right Side - Sign In/Up Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background relative">
         {/* Theme Toggle - Top Right */}
-        <div className="absolute top-6 right-6">
+        <div className="absolute top-6 right-6 flex items-center gap-2">
+          <LanguageSelector />
           <ThemeToggle />
         </div>
         
@@ -174,12 +179,12 @@ export default function SignIn() {
           {/* Welcome Text */}
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+              {isSignUp ? t("createAccount") : t("welcomeBack")}
             </h2>
             <p className="text-muted-foreground">
               {isSignUp 
-                ? "Sign up to start tracking your trades" 
-                : "Sign in to access your trading dashboard"}
+                ? t("signUpDescription") 
+                : t("signInDescription")}
             </p>
           </div>
 
@@ -195,7 +200,7 @@ export default function SignIn() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t("fullName")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -212,7 +217,7 @@ export default function SignIn() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -228,7 +233,7 @@ export default function SignIn() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -244,7 +249,7 @@ export default function SignIn() {
               </div>
               {isSignUp && (
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters
+                  {t("passwordHint")}
                 </p>
               )}
             </div>
@@ -254,7 +259,7 @@ export default function SignIn() {
               className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-base"
               disabled={isLoading}
             >
-              {isLoading ? "Loading..." : (isSignUp ? "Create Account" : "Sign In")}
+              {isLoading ? tc("loading") : (isSignUp ? t("createAccount") : t("signIn"))}
             </Button>
           </form>
 
@@ -264,7 +269,7 @@ export default function SignIn() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-3 text-muted-foreground">
-                Or continue with
+                {t("orContinueWith")}
               </span>
             </div>
           </div>
@@ -276,7 +281,7 @@ export default function SignIn() {
             variant="outline"
           >
             <Chrome className="mr-2 h-5 w-5" />
-            Continue with Google
+            {t("continueWithGoogle")}
           </Button>
 
           {/* Toggle Sign Up / Sign In */}
@@ -290,8 +295,8 @@ export default function SignIn() {
               className="text-primary hover:underline font-medium"
             >
               {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"}
+                ? t("alreadyHaveAccount") 
+                : t("dontHaveAccount")}
             </button>
           </div>
 
@@ -301,31 +306,31 @@ export default function SignIn() {
               <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <LineChart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <span className="text-sm font-medium">Real-time Tracking</span>
+              <span className="text-sm font-medium">{t("realTimeTracking")}</span>
             </div>
             <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
               <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
                 <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <span className="text-sm font-medium">AI Insights</span>
+              <span className="text-sm font-medium">{t("aiInsights")}</span>
             </div>
             <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
               <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
-              <span className="text-sm font-medium">Advanced Analytics</span>
+              <span className="text-sm font-medium">{t("advancedAnalytics")}</span>
             </div>
           </div>
 
           {/* Terms */}
           <p className="text-center text-xs text-muted-foreground px-8">
-            By continuing, you agree to our{" "}
+            {t("termsAgreement")}{" "}
             <a href="#" className="underline underline-offset-4 hover:text-primary">
-              Terms of Service
+              {t("termsOfService")}
             </a>{" "}
-            and{" "}
+            {t("and")}{" "}
             <a href="#" className="underline underline-offset-4 hover:text-primary">
-              Privacy Policy
+              {t("privacyPolicy")}
             </a>
           </p>
         </div>
