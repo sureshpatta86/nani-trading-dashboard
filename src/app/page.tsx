@@ -181,12 +181,12 @@ export default function DashboardPage() {
       });
   }, [filteredTrades]);
 
-  // Win/Loss pie chart data
+  // Win/Loss pie chart data - using CSS variable compatible colors
   const winLossData = useMemo(() => {
     if (stats.totalTrades === 0) return [];
     return [
-      { name: "Winning", value: stats.winningTrades, color: "#22c55e" },
-      { name: "Losing", value: stats.losingTrades, color: "#ef4444" },
+      { name: "Winning", value: stats.winningTrades, color: "hsl(var(--chart-2))" },
+      { name: "Losing", value: stats.losingTrades, color: "hsl(var(--destructive))" },
     ].filter((d) => d.value > 0);
   }, [stats]);
 
@@ -460,28 +460,31 @@ export default function DashboardPage() {
             <CardContent>
               {winLossData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
-                  <RechartsPieChart>
+                  <RechartsPieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <Pie
                       data={winLossData}
                       cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
+                      label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                      labelLine={true}
                     >
                       {winLossData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Legend />
+                    <Legend verticalAlign="bottom" height={36} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
                       }}
+                      itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                      labelStyle={{ color: "hsl(var(--card-foreground))" }}
                     />
                   </RechartsPieChart>
                 </ResponsiveContainer>
@@ -524,6 +527,8 @@ export default function DashboardPage() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
                       }}
+                      itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                      labelStyle={{ color: "hsl(var(--card-foreground))" }}
                       formatter={(value: number) => [formatINR(value), "P&L"]}
                     />
                     <Bar

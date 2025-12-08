@@ -232,17 +232,17 @@ export default function ReportsPage() {
       .map(([date, pl]) => ({
         date,
         profitLoss: pl,
-        fill: pl >= 0 ? "#22c55e" : "#ef4444",
+        fill: pl >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--destructive))",
       }));
   }, [filteredTrades]);
 
-  // Chart Data: Win/Loss Distribution
+  // Chart Data: Win/Loss Distribution - using CSS variable compatible colors
   const winLossData = useMemo(() => {
     if (stats.totalTrades === 0) return [];
     const data = [];
-    if (stats.winningTrades > 0) data.push({ name: "Wins", value: stats.winningTrades, color: "#22c55e" });
-    if (stats.losingTrades > 0) data.push({ name: "Losses", value: stats.losingTrades, color: "#ef4444" });
-    if (stats.breakEvenTrades > 0) data.push({ name: "Break Even", value: stats.breakEvenTrades, color: "#6b7280" });
+    if (stats.winningTrades > 0) data.push({ name: "Wins", value: stats.winningTrades, color: "hsl(var(--chart-2))" });
+    if (stats.losingTrades > 0) data.push({ name: "Losses", value: stats.losingTrades, color: "hsl(var(--destructive))" });
+    if (stats.breakEvenTrades > 0) data.push({ name: "Break Even", value: stats.breakEvenTrades, color: "hsl(var(--muted-foreground))" });
     return data;
   }, [stats]);
 
@@ -578,6 +578,8 @@ export default function ReportsPage() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
                       }}
+                      itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                      labelStyle={{ color: "hsl(var(--card-foreground))" }}
                       formatter={(value: number) => [`₹${value.toFixed(2)}`, "P&L"]}
                     />
                     <Bar dataKey="profitLoss" radius={[4, 4, 0, 0]}>
@@ -606,34 +608,37 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               {winLossData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <RechartsPieChart>
+                <ResponsiveContainer width="100%" height={280}>
+                  <RechartsPieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <Pie
                       data={winLossData}
                       cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
+                      cy="45%"
+                      innerRadius={45}
+                      outerRadius={75}
                       paddingAngle={5}
                       dataKey="value"
                       label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                      labelLine={true}
                     >
                       {winLossData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Legend />
+                    <Legend verticalAlign="bottom" height={36} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
                       }}
+                      itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                      labelStyle={{ color: "hsl(var(--card-foreground))" }}
                     />
                   </RechartsPieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
                   {t("noDataForPeriod")}
                 </div>
               )}
@@ -663,6 +668,8 @@ export default function ReportsPage() {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
                     }}
+                    itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                    labelStyle={{ color: "hsl(var(--card-foreground))" }}
                     formatter={(value: number, name: string) => {
                       if (name === "profitLoss") return [`₹${value.toFixed(2)}`, "P&L"];
                       return [value, name];
@@ -670,7 +677,7 @@ export default function ReportsPage() {
                   />
                   <Bar dataKey="profitLoss" radius={[0, 4, 4, 0]}>
                     {scriptPLData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.profitLoss >= 0 ? "#22c55e" : "#ef4444"} />
+                      <Cell key={`cell-${index}`} fill={entry.profitLoss >= 0 ? "hsl(var(--chart-2))" : "hsl(var(--destructive))"} />
                     ))}
                   </Bar>
                 </BarChart>

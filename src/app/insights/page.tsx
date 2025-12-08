@@ -367,6 +367,13 @@ export default function InsightsPage() {
                           tickFormatter={(value) => `${value}%`}
                         />
                         <Tooltip 
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                          itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                          labelStyle={{ color: "hsl(var(--card-foreground))" }}
                           formatter={(value: number, name: string) => [
                             name === "winRate" ? `${value}%` : `₹${value}`,
                             name === "winRate" ? t("winRate") : t("avgPL")
@@ -404,14 +411,22 @@ export default function InsightsPage() {
                           labelLine={false}
                           label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                           outerRadius={100}
-                          fill="#8884d8"
+                          fill="hsl(var(--primary))"
                           dataKey="value"
                         >
                           {moodDistributionData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.fill} />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                          itemStyle={{ color: "hsl(var(--card-foreground))" }}
+                          labelStyle={{ color: "hsl(var(--card-foreground))" }}
+                        />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
