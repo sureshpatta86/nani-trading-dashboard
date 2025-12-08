@@ -10,24 +10,18 @@ export async function PUT(
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { id: tradeId } = await params;
     const body = await request.json();
 
     // Verify trade belongs to user
     const existingTrade = await prisma.intradayTrade.findFirst({
-      where: { id: tradeId, userId: user.id },
+      where: { id: tradeId, userId },
     });
 
     if (!existingTrade) {
@@ -96,23 +90,17 @@ export async function DELETE(
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { id: tradeId } = await params;
 
     // Verify trade belongs to user
     const existingTrade = await prisma.intradayTrade.findFirst({
-      where: { id: tradeId, userId: user.id },
+      where: { id: tradeId, userId },
     });
 
     if (!existingTrade) {

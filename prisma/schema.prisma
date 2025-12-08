@@ -88,13 +88,16 @@ model IntradayTrade {
   profitLoss      Float    // P&L in rupees
   followSetup     Boolean  // Did trader follow the setup?
   remarks         String?  @db.Text
-mood          String   @default("CALM") // Trader's emotional state: CALM, ANXIOUS, CONFIDENT, OVERCONFIDENT, FOMO, PANICKED
+  mood            String   @default("CALM") // Trader's emotional state: CALM, ANXIOUS, CONFIDENT, OVERCONFIDENT, FOMO, PANICKED
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId, date])
+  @@index([userId, script])       // For filtering by script
+  @@index([userId, profitLoss])   // For win/loss calculations
+  @@index([userId, followSetup])  // For setup adherence analysis
   @@map("intraday_trades")
 }
 

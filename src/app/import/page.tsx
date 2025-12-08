@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/select";
 import { Upload, FileSpreadsheet, CheckCircle2, Loader2, FileUp, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from "xlsx";
+// Dynamic import for xlsx - loaded only when needed
+import type * as XLSXType from "xlsx";
 
 interface CSVColumn {
   name: string;
@@ -142,10 +143,13 @@ export default function ImportPage() {
     setFile(uploadedFile);
 
     if (isExcel) {
-      // Handle Excel file
+      // Handle Excel file - dynamically import xlsx
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
+          // Dynamic import of xlsx library
+          const XLSX = await import("xlsx");
+          
           const data = event.target?.result;
           const workbook = XLSX.read(data, { type: "array" });
           

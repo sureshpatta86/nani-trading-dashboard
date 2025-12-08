@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import useSWR from "swr";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,13 +61,36 @@ export default function IntradayLogPage() {
   const { toast } = useToast();
   const t = useTranslations("intraday");
   const tc = useTranslations("common");
-  const [trades, setTrades] = useState<IntradayTrade[]>([]);
+  
+  // SWR for data fetching with caching
+  const fetcher = useCallback((url: string) => 
+    fetch(url).then(res => res.ok ? res.json() : Promise.reject()), []);
+  
+  const { data: trades = [], mutate, isLoading: swrLoading } = useSWR<IntradayTrade[]>(
+    status === "authenticated" ? "/api/intraday" : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
+  );
+  
+  const { data: profileData } = useSWR(
+    status === "authenticated" ? "/api/profile" : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000, // 5 minutes
+    }
+  );
+  
+  const initialCapital = profileData?.initialCapital || 0;
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [initialCapital, setInitialCapital] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [tradesPerPage, setTradesPerPage] = useState(25);
 
@@ -98,37 +122,14 @@ export default function IntradayLogPage() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
-    } else if (status === "authenticated") {
-      fetchTrades();
-      fetchUserProfile();
     }
   }, [status, router]);
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await fetch("/api/profile");
-      if (response.ok) {
-        const data = await response.json();
-        setInitialCapital(data.initialCapital || 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch user profile:", error);
-    }
-  };
-
-  const fetchTrades = async () => {
-    try {
-      const response = await fetch("/api/intraday");
-      if (response.ok) {
-        const data = await response.json();
-        setTrades(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch trades:", error);
-    } finally {
+  
+  useEffect(() => {
+    if (!swrLoading) {
       setIsLoading(false);
     }
-  };
+  }, [swrLoading]);
 
   const calculateProfitLoss = () => {
     const qty = parseFloat(formData.quantity) || 0;
@@ -174,7 +175,7 @@ export default function IntradayLogPage() {
       });
 
       if (response.ok) {
-        await fetchTrades();
+        mutate(); // Revalidate cache
         resetForm();
         setDialogOpen(false);
       } else {
@@ -215,7 +216,7 @@ export default function IntradayLogPage() {
       });
 
       if (response.ok) {
-        await fetchTrades();
+        mutate(); // Revalidate cache
       } else {
         alert(tc("deleteFailed"));
       }
@@ -385,7 +386,7 @@ export default function IntradayLogPage() {
 
     // Refresh trades list
     if (successCount > 0) {
-      await fetchTrades();
+      mutate(); // Revalidate cache
       toast({
         title: t("importSuccess"),
         description: t("importSuccessDesc", { count: successCount }),

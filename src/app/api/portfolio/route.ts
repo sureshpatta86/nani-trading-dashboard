@@ -8,37 +8,34 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const updatePrices = searchParams.get("updatePrices") === "true";
 
     let stocks = await prisma.portfolioStock.findMany({
-      where: { userId: user.id },
+      where: { userId },
       orderBy: { stockName: "asc" },
     });
 
-    // Update prices if requested
+    // Update prices if requested - fetch all prices in parallel for performance
     if (updatePrices && stocks.length > 0) {
-      // Fetch prices for all stocks
-      for (const stock of stocks) {
-        const priceData = await fetchStockPrice(stock.stockName);
-        
-        if (priceData) {
+      const symbols = stocks.map(s => s.stockName);
+      const priceMap = await fetchMultipleStockPrices(symbols);
+      
+      // Batch update all stocks in a transaction
+      const updatePromises = stocks
+        .filter(stock => priceMap.has(stock.stockName))
+        .map(stock => {
+          const priceData = priceMap.get(stock.stockName)!;
           const profitLoss = (priceData.price - stock.averagePrice) * stock.quantity;
           const profitLossPercent = ((priceData.price - stock.averagePrice) / stock.averagePrice) * 100;
           
-          await prisma.portfolioStock.update({
+          return prisma.portfolioStock.update({
             where: { id: stock.id },
             data: {
               currentPrice: priceData.price,
@@ -47,12 +44,15 @@ export async function GET(request: NextRequest) {
               lastPriceUpdate: new Date(),
             },
           });
-        }
+        });
+      
+      if (updatePromises.length > 0) {
+        await prisma.$transaction(updatePromises);
       }
 
       // Refetch updated stocks
       stocks = await prisma.portfolioStock.findMany({
-        where: { userId: user.id },
+        where: { userId },
         orderBy: { stockName: "asc" },
       });
     }
@@ -87,17 +87,11 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const body = await request.json();
     
@@ -120,7 +114,7 @@ export async function POST(request: NextRequest) {
     const existingStock = await prisma.portfolioStock.findUnique({
       where: {
         userId_stockName: {
-          userId: user.id,
+          userId,
           stockName: stockName,
         },
       },
@@ -145,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     const stock = await prisma.portfolioStock.create({
       data: {
-        userId: user.id,
+        userId,
         stockName: stockName,
         displayName: displayName,
         averagePrice: parseFloat(averagePrice),
@@ -188,17 +182,11 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const stockId = searchParams.get("id");
@@ -214,7 +202,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify stock belongs to user
     const existingStock = await prisma.portfolioStock.findFirst({
-      where: { id: stockId, userId: user.id },
+      where: { id: stockId, userId },
     });
 
     if (!existingStock) {
@@ -317,17 +305,11 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const stockId = searchParams.get("id");
@@ -341,7 +323,7 @@ export async function DELETE(request: NextRequest) {
 
     // Verify stock belongs to user
     const existingStock = await prisma.portfolioStock.findFirst({
-      where: { id: stockId, userId: user.id },
+      where: { id: stockId, userId },
     });
 
     if (!existingStock) {

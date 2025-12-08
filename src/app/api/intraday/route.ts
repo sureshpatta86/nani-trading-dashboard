@@ -2,26 +2,47 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-// GET /api/intraday - Fetch all intraday trades for the authenticated user
+// GET /api/intraday - Fetch intraday trades for the authenticated user with optional pagination
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
+    
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "0");
+    const limit = parseInt(searchParams.get("limit") || "0");
+    const isPaginated = page > 0 && limit > 0;
+    
+    // Get total count for pagination
+    const total = isPaginated 
+      ? await prisma.intradayTrade.count({ where: { userId } })
+      : 0;
 
     const trades = await prisma.intradayTrade.findMany({
-      where: { userId: user.id },
+      where: { userId },
       orderBy: { date: "desc" },
+      ...(isPaginated && {
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      select: {
+        id: true,
+        date: true,
+        script: true,
+        buySell: true,
+        quantity: true,
+        entryPrice: true,
+        exitPrice: true,
+        profitLoss: true,
+        followSetup: true,
+        remarks: true,
+        mood: true,
+      },
     });
 
     // Transform to match frontend expectations
@@ -41,6 +62,20 @@ export async function GET(request: NextRequest) {
       mood: trade.mood,
     }));
 
+    // Return paginated response if pagination was requested
+    if (isPaginated) {
+      return NextResponse.json({
+        trades: transformedTrades,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    }
+
+    // Return flat array for backward compatibility
     return NextResponse.json(transformedTrades);
   } catch (error) {
     console.error("Error fetching intraday trades:", error);
@@ -56,17 +91,11 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const body = await request.json();
     
@@ -97,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     const trade = await prisma.intradayTrade.create({
       data: {
-        userId: user.id,
+        userId,
         date: dateObj,
         day: dateObj.toLocaleDateString('en-IN', { weekday: 'long' }),
         script,
@@ -143,17 +172,11 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const tradeId = searchParams.get("id");
@@ -169,7 +192,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify trade belongs to user
     const existingTrade = await prisma.intradayTrade.findFirst({
-      where: { id: tradeId, userId: user.id },
+      where: { id: tradeId, userId },
     });
 
     if (!existingTrade) {
@@ -212,17 +235,11 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const tradeId = searchParams.get("id");
@@ -236,7 +253,7 @@ export async function DELETE(request: NextRequest) {
 
     // Verify trade belongs to user
     const existingTrade = await prisma.intradayTrade.findFirst({
-      where: { id: tradeId, userId: user.id },
+      where: { id: tradeId, userId },
     });
 
     if (!existingTrade) {

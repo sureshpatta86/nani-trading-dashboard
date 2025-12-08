@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import useSWR from "swr";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,20 @@ export default function PortfolioPage() {
   const { toast } = useToast();
   const t = useTranslations("portfolio");
   const tc = useTranslations("common");
-  const [stocks, setStocks] = useState<PortfolioStock[]>([]);
+  
+  // SWR for data fetching with caching
+  const fetcher = useCallback((url: string) => 
+    fetch(url).then(res => res.ok ? res.json() : Promise.reject()), []);
+  
+  const { data: stocks = [], mutate, isLoading: swrLoading } = useSWR<PortfolioStock[]>(
+    status === "authenticated" ? "/api/portfolio" : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
+  );
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -69,24 +83,14 @@ export default function PortfolioPage() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
-    } else if (status === "authenticated") {
-      fetchPortfolio();
     }
   }, [status, router]);
-
-  const fetchPortfolio = async () => {
-    try {
-      const response = await fetch("/api/portfolio");
-      if (response.ok) {
-        const data = await response.json();
-        setStocks(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch portfolio:", error);
-    } finally {
+  
+  useEffect(() => {
+    if (!swrLoading) {
       setIsLoading(false);
     }
-  };
+  }, [swrLoading]);
 
   const refreshPrices = async () => {
     setIsRefreshing(true);
@@ -94,7 +98,7 @@ export default function PortfolioPage() {
       const response = await fetch("/api/portfolio?updatePrices=true");
       if (response.ok) {
         const data = await response.json();
-        setStocks(data);
+        mutate(data, false); // Update cache without revalidation
         toast({
           title: t("pricesUpdated"),
           description: t("pricesUpdatedDesc"),
@@ -142,7 +146,7 @@ export default function PortfolioPage() {
       });
 
       if (response.ok) {
-        await fetchPortfolio();
+        mutate(); // Revalidate cache
         resetForm();
         setDialogOpen(false);
       } else {
@@ -178,7 +182,7 @@ export default function PortfolioPage() {
       });
 
       if (response.ok) {
-        await fetchPortfolio();
+        mutate(); // Revalidate cache
       } else {
         alert(tc("deleteFailed"));
       }
@@ -321,7 +325,7 @@ export default function PortfolioPage() {
 
     // Refresh stocks list
     if (successCount > 0) {
-      await fetchPortfolio();
+      mutate(); // Revalidate cache
       toast({
         title: t("importSuccess"),
         description: t("importSuccessDesc", { count: successCount }),
