@@ -1,4 +1,11 @@
 import useSWR, { SWRConfiguration } from "swr";
+import type { 
+  PortfolioStock, 
+  IntradayTrade, 
+  UserProfile,
+  DashboardStats,
+  PeriodType 
+} from "@/types/trading";
 
 const fetcher = (url: string) => fetch(url).then((res) => {
   if (!res.ok) throw new Error("Failed to fetch");
@@ -11,43 +18,8 @@ const defaultConfig: SWRConfiguration = {
   errorRetryCount: 2,
 };
 
-interface PortfolioStock {
-  id: string;
-  symbol: string;
-  name?: string;
-  quantity: number;
-  buyPrice: number;
-  currentPrice: number;
-  investedValue: number;
-  currentValue: number;
-  profitLoss: number;
-  profitLossPercentage: number;
-  purchaseDate: string;
-}
-
-interface IntradayTrade {
-  id: string;
-  tradeDate: string;
-  script: string;
-  type: "BUY" | "SELL";
-  quantity: number;
-  buyPrice: number;
-  sellPrice: number;
-  profitLoss: number;
-  charges: number;
-  netProfitLoss: number;
-  remarks?: string;
-  followSetup: boolean;
-  mood: string;
-}
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  initialCapital: number;
-  createdAt: string;
-}
+// Re-export types for convenience
+export type { PortfolioStock, IntradayTrade, UserProfile, DashboardStats };
 
 /**
  * Hook for fetching portfolio data with caching
@@ -76,6 +48,18 @@ export function useProfile() {
   return useSWR<UserProfile>("/api/profile", fetcher, {
     ...defaultConfig,
     dedupingInterval: 300000, // 5 minutes - profile rarely changes
+  });
+}
+
+/**
+ * Hook for fetching dashboard stats with server-side aggregation
+ */
+export function useDashboardStats(period: PeriodType = "all") {
+  const url = `/api/dashboard/stats?period=${period}`;
+  
+  return useSWR<DashboardStats>(url, fetcher, {
+    ...defaultConfig,
+    dedupingInterval: 30000, // 30 seconds for dashboard
   });
 }
 

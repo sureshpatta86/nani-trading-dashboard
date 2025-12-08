@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -43,7 +43,23 @@ import {
   FileText,
   PieChart,
   CalendarDays,
+  Printer,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Legend,
+  LineChart,
+  Line,
+} from "recharts";
 
 interface IntradayTrade {
   id: string;
@@ -199,6 +215,64 @@ export default function ReportsPage() {
     };
   }, [filteredTrades]);
 
+  // Chart Data: Daily P&L
+  const dailyPLData = useMemo(() => {
+    const dailyMap: Record<string, number> = {};
+    
+    filteredTrades.forEach((trade) => {
+      const date = new Date(trade.tradeDate).toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+      });
+      dailyMap[date] = (dailyMap[date] || 0) + trade.netProfitLoss;
+    });
+
+    return Object.entries(dailyMap)
+      .slice(-15)
+      .map(([date, pl]) => ({
+        date,
+        profitLoss: pl,
+        fill: pl >= 0 ? "#22c55e" : "#ef4444",
+      }));
+  }, [filteredTrades]);
+
+  // Chart Data: Win/Loss Distribution
+  const winLossData = useMemo(() => {
+    if (stats.totalTrades === 0) return [];
+    const data = [];
+    if (stats.winningTrades > 0) data.push({ name: "Wins", value: stats.winningTrades, color: "#22c55e" });
+    if (stats.losingTrades > 0) data.push({ name: "Losses", value: stats.losingTrades, color: "#ef4444" });
+    if (stats.breakEvenTrades > 0) data.push({ name: "Break Even", value: stats.breakEvenTrades, color: "#6b7280" });
+    return data;
+  }, [stats]);
+
+  // Chart Data: Script-wise performance
+  const scriptPLData = useMemo(() => {
+    const scriptMap: Record<string, { pl: number; trades: number }> = {};
+    
+    filteredTrades.forEach((trade) => {
+      if (!scriptMap[trade.script]) {
+        scriptMap[trade.script] = { pl: 0, trades: 0 };
+      }
+      scriptMap[trade.script].pl += trade.netProfitLoss;
+      scriptMap[trade.script].trades += 1;
+    });
+
+    return Object.entries(scriptMap)
+      .map(([script, data]) => ({
+        script,
+        profitLoss: data.pl,
+        trades: data.trades,
+      }))
+      .sort((a, b) => b.profitLoss - a.profitLoss)
+      .slice(0, 8);
+  }, [filteredTrades]);
+
+  // Print report as PDF
+  const printReport = () => {
+    window.print();
+  };
+
   // Pagination
   const totalPages = Math.ceil(filteredTrades.length / tradesPerPage);
   const startIndex = (currentPage - 1) * tradesPerPage;
@@ -305,7 +379,11 @@ export default function ReportsPage() {
             <p className="text-muted-foreground mt-1">{t("description")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={exportReport} variant="outline" disabled={filteredTrades.length === 0}>
+            <Button onClick={printReport} variant="outline" disabled={filteredTrades.length === 0} className="print:hidden">
+              <Printer className="mr-2 h-4 w-4" />
+              {t("printReport")}
+            </Button>
+            <Button onClick={exportReport} variant="outline" disabled={filteredTrades.length === 0} className="print:hidden">
               <Download className="mr-2 h-4 w-4" />
               {t("exportReport")}
             </Button>
@@ -475,6 +553,131 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Charts Section */}
+        <div className="grid gap-6 lg:grid-cols-2 print:grid-cols-2">
+          {/* Daily P&L Chart */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                {t("dailyPL")}
+              </CardTitle>
+              <CardDescription>{t("dailyPLDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dailyPLData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={dailyPLData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                      formatter={(value: number) => [`₹${value.toFixed(2)}`, "P&L"]}
+                    />
+                    <Bar dataKey="profitLoss" radius={[4, 4, 0, 0]}>
+                      {dailyPLData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  {t("noDataForPeriod")}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Win/Loss Distribution */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <PieChart className="h-5 w-5 text-primary" />
+                {t("tradeDistribution")}
+              </CardTitle>
+              <CardDescription>{t("winLossBreakdown")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {winLossData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={winLossData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    >
+                      {winLossData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  {t("noDataForPeriod")}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Script Performance Chart */}
+        {scriptPLData.length > 0 && (
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Target className="h-5 w-5 text-primary" />
+                {t("scriptPerformance")}
+              </CardTitle>
+              <CardDescription>{t("scriptPerformanceDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={scriptPLData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(1)}k`} />
+                  <YAxis type="category" dataKey="script" tick={{ fontSize: 11 }} width={80} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                    formatter={(value: number, name: string) => {
+                      if (name === "profitLoss") return [`₹${value.toFixed(2)}`, "P&L"];
+                      return [value, name];
+                    }}
+                  />
+                  <Bar dataKey="profitLoss" radius={[0, 4, 4, 0]}>
+                    {scriptPLData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.profitLoss >= 0 ? "#22c55e" : "#ef4444"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Detailed Stats */}
         <div className="grid gap-4 md:grid-cols-2">
