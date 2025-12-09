@@ -55,6 +55,14 @@ interface IntradayTrade {
   mood: string;
 }
 
+// Helper to normalize API response (handles both array and paginated response)
+const normalizeTradesResponse = (data: IntradayTrade[] | { trades: IntradayTrade[] } | undefined): IntradayTrade[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.trades && Array.isArray(data.trades)) return data.trades;
+  return [];
+};
+
 export default function IntradayLogPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -62,18 +70,21 @@ export default function IntradayLogPage() {
   const t = useTranslations("intraday");
   const tc = useTranslations("common");
   
-  // SWR for data fetching with caching
+  // SWR for data fetching with caching - fetch all trades for the intraday page
   const fetcher = useCallback((url: string) => 
     fetch(url).then(res => res.ok ? res.json() : Promise.reject()), []);
   
-  const { data: trades = [], mutate, isLoading: swrLoading } = useSWR<IntradayTrade[]>(
-    status === "authenticated" ? "/api/intraday" : null,
+  const { data: tradesData, mutate, isLoading: swrLoading } = useSWR<IntradayTrade[] | { trades: IntradayTrade[] }>(
+    status === "authenticated" ? "/api/intraday?all=true" : null,
     fetcher,
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000, // Cache for 1 minute
     }
   );
+  
+  // Normalize the trades response
+  const trades = normalizeTradesResponse(tradesData);
   
   const { data: profileData } = useSWR(
     status === "authenticated" ? "/api/profile" : null,
@@ -1052,10 +1063,10 @@ export default function IntradayLogPage() {
                         <TableCell className="font-medium">{trade.script}</TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border-2 shadow-sm ${
                               trade.type === "BUY"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                ? "bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:border-emerald-400"
+                                : "bg-rose-600 text-white border-rose-700 dark:bg-rose-500 dark:text-rose-950 dark:border-rose-400"
                             }`}
                           >
                             {trade.type}
@@ -1090,32 +1101,34 @@ export default function IntradayLogPage() {
                         </TableCell>
                         <TableCell className="text-center">
                           {trade.followSetup ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                              ✓ Yes
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border-2 shadow-sm bg-teal-600 text-white border-teal-700 dark:bg-teal-400 dark:text-teal-950 dark:border-teal-300">
+                              <span>✓</span> Yes
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                              ✗ No
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border-2 shadow-sm bg-amber-500 text-white border-amber-600 dark:bg-amber-400 dark:text-amber-950 dark:border-amber-300">
+                              <span>✗</span> No
                             </span>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            trade.mood === "CALM" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
-                            trade.mood === "CONFIDENT" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
-                            trade.mood === "OVERCONFIDENT" ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" :
-                            trade.mood === "ANXIOUS" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" :
-                            trade.mood === "FOMO" ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" :
-                            trade.mood === "PANICKED" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
-                            "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border-2 shadow-sm ${
+                            trade.mood === "CALM" ? "bg-sky-600 text-white border-sky-700 dark:bg-sky-400 dark:text-sky-950 dark:border-sky-300" :
+                            trade.mood === "CONFIDENT" ? "bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:border-emerald-300" :
+                            trade.mood === "OVERCONFIDENT" ? "bg-violet-600 text-white border-violet-700 dark:bg-violet-400 dark:text-violet-950 dark:border-violet-300" :
+                            trade.mood === "ANXIOUS" ? "bg-yellow-500 text-white border-yellow-600 dark:bg-yellow-400 dark:text-yellow-950 dark:border-yellow-300" :
+                            trade.mood === "FOMO" ? "bg-orange-600 text-white border-orange-700 dark:bg-orange-400 dark:text-orange-950 dark:border-orange-300" :
+                            trade.mood === "PANICKED" ? "bg-red-600 text-white border-red-700 dark:bg-red-400 dark:text-red-950 dark:border-red-300" :
+                            "bg-slate-600 text-white border-slate-700 dark:bg-slate-400 dark:text-slate-950 dark:border-slate-300"
                           }`}>
-                            {trade.mood === "CALM" && "😌"} 
-                            {trade.mood === "CONFIDENT" && "😎"} 
-                            {trade.mood === "OVERCONFIDENT" && "🤩"} 
-                            {trade.mood === "ANXIOUS" && "😰"} 
-                            {trade.mood === "FOMO" && "😱"} 
-                            {trade.mood === "PANICKED" && "😨"} 
-                            {" "}{trade.mood || "CALM"}
+                            <span>
+                              {trade.mood === "CALM" && "😌"}
+                              {trade.mood === "CONFIDENT" && "😎"}
+                              {trade.mood === "OVERCONFIDENT" && "🤩"}
+                              {trade.mood === "ANXIOUS" && "😰"}
+                              {trade.mood === "FOMO" && "😱"}
+                              {trade.mood === "PANICKED" && "😨"}
+                            </span>
+                            {trade.mood || "CALM"}
                           </span>
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate" title={trade.remarks}>{trade.remarks}</TableCell>

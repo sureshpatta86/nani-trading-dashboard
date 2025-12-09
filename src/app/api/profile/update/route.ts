@@ -20,7 +20,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updateData: any = {
+    interface ProfileUpdateData {
+      name: string;
+      initialCapital?: number;
+    }
+    
+    const updateData: ProfileUpdateData = {
       name: name.trim(),
     };
 

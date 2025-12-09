@@ -52,6 +52,14 @@ import type { PeriodType, IntradayTrade, PortfolioStock } from "@/types/trading"
 const fetcher = (url: string) =>
   fetch(url).then((res) => (res.ok ? res.json() : Promise.reject()));
 
+// Helper to normalize API response (handles both array and paginated response)
+const normalizeTradesResponse = (data: IntradayTrade[] | { trades: IntradayTrade[] } | undefined): IntradayTrade[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.trades && Array.isArray(data.trades)) return data.trades;
+  return [];
+};
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const t = useTranslations("dashboard");
@@ -59,12 +67,15 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState<PeriodType>("all");
   const [refreshing, setRefreshing] = useState(false);
 
-  // SWR for data fetching with caching
-  const { data: trades = [], mutate: mutateTrades } = useSWR<IntradayTrade[]>(
-    status === "authenticated" ? "/api/intraday" : null,
+  // SWR for data fetching with caching - fetch all trades for dashboard
+  const { data: tradesData, mutate: mutateTrades } = useSWR<IntradayTrade[] | { trades: IntradayTrade[] }>(
+    status === "authenticated" ? "/api/intraday?all=true" : null,
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 60000 }
   );
+  
+  // Normalize the trades response
+  const trades = useMemo(() => normalizeTradesResponse(tradesData), [tradesData]);
 
   const { data: portfolio = [], mutate: mutatePortfolio } = useSWR<PortfolioStock[]>(
     status === "authenticated" ? "/api/portfolio" : null,

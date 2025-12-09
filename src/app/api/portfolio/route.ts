@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { fetchStockPrice, fetchMultipleStockPrices } from "@/lib/stock-api";
+import { 
+  createPortfolioStockSchema, 
+  updatePortfolioStockSchema,
+  validate 
+} from "@/lib/validations";
+import { withRateLimit } from "@/lib/rate-limit";
 
 // GET /api/portfolio - Fetch all portfolio stocks for authenticated user
 export async function GET(request: NextRequest) {
@@ -13,6 +19,10 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, userId, "standard");
+    if (rateLimitResponse) return rateLimitResponse;
 
     const { searchParams } = new URL(request.url);
     const updatePrices = searchParams.get("updatePrices") === "true";
@@ -92,23 +102,28 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, userId, "standard");
+    if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();
     
-    // Support both field names for flexibility
-    const stockName = (body.symbol || body.stockName)?.toUpperCase();
-    const displayName = body.name || body.displayName || null;
-    const averagePrice = body.buyPrice || body.averagePrice;
-    const quantity = body.quantity;
-    const purchaseDate = body.purchaseDate ? new Date(body.purchaseDate) : new Date();
-
-    // Validation
-    if (!stockName || !averagePrice || !quantity) {
+    // Validate with Zod
+    const validation = validate(createPortfolioStockSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Missing required fields: symbol/stockName, buyPrice/averagePrice, quantity" },
+        { error: validation.error },
         { status: 400 }
       );
     }
+    
+    const data = validation.data;
+    const stockName = (data.symbol || data.stockName || "").toUpperCase();
+    const displayName = data.name || data.displayName || null;
+    const averagePrice = data.buyPrice || data.averagePrice || 0;
+    const quantity = data.quantity;
+    const purchaseDate = data.purchaseDate || new Date();
 
     // Check if stock already exists for this user
     const existingStock = await prisma.portfolioStock.findUnique({
@@ -131,10 +146,10 @@ export async function POST(request: NextRequest) {
     const priceData = await fetchStockPrice(stockName);
     const currentPrice = priceData?.price || null;
     const profitLoss = currentPrice
-      ? (currentPrice - parseFloat(averagePrice)) * parseInt(quantity)
+      ? (currentPrice - averagePrice) * quantity
       : null;
     const profitLossPercent = currentPrice
-      ? ((currentPrice - parseFloat(averagePrice)) / parseFloat(averagePrice)) * 100
+      ? ((currentPrice - averagePrice) / averagePrice) * 100
       : null;
 
     const stock = await prisma.portfolioStock.create({
@@ -142,8 +157,8 @@ export async function POST(request: NextRequest) {
         userId,
         stockName: stockName,
         displayName: displayName,
-        averagePrice: parseFloat(averagePrice),
-        quantity: parseInt(quantity),
+        averagePrice: averagePrice,
+        quantity: quantity,
         currentPrice,
         profitLoss,
         profitLossPercent,
@@ -187,6 +202,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, userId, "standard");
+    if (rateLimitResponse) return rateLimitResponse;
 
     const { searchParams } = new URL(request.url);
     const stockId = searchParams.get("id");
@@ -199,6 +218,15 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
+    
+    // Validate with Zod
+    const validation = validate(updatePortfolioStockSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
 
     // Verify stock belongs to user
     const existingStock = await prisma.portfolioStock.findFirst({
@@ -212,14 +240,25 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Support both field names for flexibility
-    const stockName = body.symbol || body.stockName;
-    const displayName = body.name !== undefined ? body.name : (body.displayName !== undefined ? body.displayName : undefined);
-    const averagePrice = body.buyPrice !== undefined ? parseFloat(body.buyPrice) : (body.averagePrice !== undefined ? parseFloat(body.averagePrice) : undefined);
-    const quantity = body.quantity !== undefined ? parseInt(body.quantity) : undefined;
-    const purchaseDate = body.purchaseDate ? new Date(body.purchaseDate) : undefined;
+    const data = validation.data;
+    const stockName = data.symbol || data.stockName;
+    const displayName = data.name !== undefined ? data.name : data.displayName;
+    const averagePrice = data.buyPrice ?? data.averagePrice;
+    const quantity = data.quantity;
+    const purchaseDate = data.purchaseDate;
 
-    const updateData: Record<string, any> = {};
+    // Build update data with proper types
+    interface PortfolioUpdateData {
+      stockName?: string;
+      displayName?: string | null;
+      averagePrice?: number;
+      quantity?: number;
+      purchaseDate?: Date;
+      profitLoss?: number;
+      profitLossPercent?: number;
+    }
+    
+    const updateData: PortfolioUpdateData = {};
     
     if (stockName !== undefined && stockName !== existingStock.stockName) {
       updateData.stockName = stockName.toUpperCase();
@@ -310,6 +349,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, userId, "standard");
+    if (rateLimitResponse) return rateLimitResponse;
 
     const { searchParams } = new URL(request.url);
     const stockId = searchParams.get("id");

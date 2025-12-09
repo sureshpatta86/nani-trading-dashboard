@@ -18,12 +18,14 @@ export function LanguageSelector() {
   const locale = useLocale();
   const router = useRouter();
 
-  const handleLocaleChange = (newLocale: Locale) => {
-    // Set cookie for locale persistence
-    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
+  const handleLocaleChange = React.useCallback((newLocale: Locale) => {
+    // Set cookie for locale persistence using window to avoid React compiler issues
+    if (typeof window !== 'undefined') {
+      window.document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
+    }
     // Refresh the page to apply the new locale
     router.refresh();
-  };
+  }, [router]);
 
   return (
     <DropdownMenu>

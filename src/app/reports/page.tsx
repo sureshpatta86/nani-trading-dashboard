@@ -122,10 +122,12 @@ export default function ReportsPage() {
 
   const fetchTrades = async () => {
     try {
-      const response = await fetch("/api/intraday");
+      const response = await fetch("/api/intraday?all=true");
       if (response.ok) {
         const data = await response.json();
-        setTrades(data);
+        // Handle both array and paginated response
+        const tradesArray = Array.isArray(data) ? data : (data.trades || []);
+        setTrades(tradesArray);
       }
     } catch (error) {
       console.error("Failed to fetch trades:", error);

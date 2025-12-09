@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { 
+  createIntradayTradeSchema, 
+  updateIntradayTradeSchema,
+  validate 
+} from "@/lib/validations";
+import { withRateLimit } from "@/lib/rate-limit";
 
-// GET /api/intraday - Fetch intraday trades for the authenticated user with optional pagination
+// Default pagination settings
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
+// GET /api/intraday - Fetch intraday trades for the authenticated user with pagination
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -13,20 +23,26 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
     
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, userId, "standard");
+    if (rateLimitResponse) return rateLimitResponse;
+    
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "0");
-    const limit = parseInt(searchParams.get("limit") || "0");
-    const isPaginated = page > 0 && limit > 0;
+    const requestedPage = parseInt(searchParams.get("page") || "1");
+    const requestedLimit = parseInt(searchParams.get("limit") || String(DEFAULT_PAGE_SIZE));
+    const allRecords = searchParams.get("all") === "true";
+    
+    // Apply pagination by default unless explicitly requesting all
+    const page = Math.max(1, requestedPage);
+    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, requestedLimit));
     
     // Get total count for pagination
-    const total = isPaginated 
-      ? await prisma.intradayTrade.count({ where: { userId } })
-      : 0;
+    const total = await prisma.intradayTrade.count({ where: { userId } });
 
     const trades = await prisma.intradayTrade.findMany({
       where: { userId },
       orderBy: { date: "desc" },
-      ...(isPaginated && {
+      ...(!allRecords && {
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -62,8 +78,8 @@ export async function GET(request: NextRequest) {
       mood: trade.mood,
     }));
 
-    // Return paginated response if pagination was requested
-    if (isPaginated) {
+    // Return paginated response (always include pagination info now)
+    if (!allRecords) {
       return NextResponse.json({
         trades: transformedTrades,
         pagination: {
@@ -96,49 +112,57 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    
+    // Rate limit check
+    const rateLimitResponse = await withRateLimit(request, userId, "standard");
+    if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();
     
-    // Support both old and new field names for backward compatibility
-    const tradeDate = body.tradeDate || body.date;
-    const script = body.script;
-    const type = body.type || body.buySell;
-    const quantity = body.quantity;
-    const buyPrice = body.buyPrice || body.entryPrice;
-    const sellPrice = body.sellPrice || body.exitPrice;
-    const profitLoss = body.profitLoss;
-    const charges = body.charges || 0;
-    const netProfitLoss = body.netProfitLoss || profitLoss;
-    const followSetup = body.followSetup ?? true;
-    const remarks = body.remarks;
-    const mood = body.mood || 'CALM';
-
-    // Validation
-    if (!tradeDate || !script || !type || !quantity || !buyPrice || !sellPrice) {
+    // Normalize field names for backward compatibility before validation
+    const normalizedBody = {
+      tradeDate: body.tradeDate || body.date,
+      script: body.script,
+      type: body.type || body.buySell,
+      quantity: body.quantity,
+      buyPrice: body.buyPrice || body.entryPrice,
+      sellPrice: body.sellPrice || body.exitPrice,
+      profitLoss: body.profitLoss,
+      charges: body.charges || 0,
+      netProfitLoss: body.netProfitLoss || body.profitLoss,
+      followSetup: body.followSetup ?? true,
+      remarks: body.remarks,
+      mood: body.mood || 'CALM',
+    };
+    
+    // Validate with Zod
+    const validation = validate(createIntradayTradeSchema, normalizedBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: validation.error },
         { status: 400 }
       );
     }
-
-    const dateObj = new Date(tradeDate);
-    const points = parseFloat(sellPrice) - parseFloat(buyPrice);
+    
+    const data = validation.data;
+    const points = data.sellPrice - data.buyPrice;
+    const calculatedNetPL = data.netProfitLoss ?? ((data.sellPrice - data.buyPrice) * data.quantity - data.charges);
 
     const trade = await prisma.intradayTrade.create({
       data: {
         userId,
-        date: dateObj,
-        day: dateObj.toLocaleDateString('en-IN', { weekday: 'long' }),
-        script,
-        buySell: type,
-        quantity: parseInt(quantity),
-        entryPrice: parseFloat(buyPrice),
-        exitPrice: parseFloat(sellPrice),
+        date: data.tradeDate,
+        day: data.tradeDate.toLocaleDateString('en-IN', { weekday: 'long' }),
+        script: data.script,
+        buySell: data.type,
+        quantity: data.quantity,
+        entryPrice: data.buyPrice,
+        exitPrice: data.sellPrice,
         points,
-        profitLoss: parseFloat(netProfitLoss),
-        followSetup: Boolean(followSetup),
-        remarks: remarks || null,
-        mood: mood,
+        profitLoss: calculatedNetPL,
+        followSetup: data.followSetup,
+        remarks: data.remarks || null,
+        mood: data.mood,
       },
     });
 
@@ -152,7 +176,7 @@ export async function POST(request: NextRequest) {
       buyPrice: trade.entryPrice,
       sellPrice: trade.exitPrice,
       profitLoss: trade.profitLoss,
-      charges,
+      charges: data.charges,
       netProfitLoss: trade.profitLoss,
       followSetup: trade.followSetup,
       remarks: trade.remarks,

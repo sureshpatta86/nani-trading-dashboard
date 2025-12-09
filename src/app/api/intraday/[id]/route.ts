@@ -32,7 +32,21 @@ export async function PUT(
     }
 
     // Support both old and new field names
-    const updateData: any = {};
+    interface TradeUpdateData {
+      date?: Date;
+      day?: string;
+      script?: string;
+      buySell?: string;
+      quantity?: number;
+      entryPrice?: number;
+      exitPrice?: number;
+      points?: number;
+      profitLoss?: number;
+      followSetup?: boolean;
+      remarks?: string | null;
+      mood?: string;
+    }
+    const updateData: TradeUpdateData = {};
     
     if (body.tradeDate) {
       const dateObj = new Date(body.tradeDate);
