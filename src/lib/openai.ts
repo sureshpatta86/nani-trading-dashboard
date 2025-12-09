@@ -1,9 +1,19 @@
 import OpenAI from "openai";
 
-// Initialize OpenAI client with API key from environment
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize OpenAI client to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY environment variable is not set");
+    }
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 // Trade data structure for AI analysis
 export interface TradeData {
@@ -197,7 +207,7 @@ Be specific and reference actual data patterns. If remarks are sparse, focus mor
 
   try {
     // Using GPT-5.1 with the new responses API
-    const response = await openai.responses.create({
+    const response = await getOpenAIClient().responses.create({
       model: "gpt-5.1",
       instructions: "You are an expert trading psychologist. Respond only with valid JSON, no markdown formatting.",
       input: prompt,
@@ -327,4 +337,4 @@ function getEmptyInsights(): AIInsights {
   };
 }
 
-export default openai;
+export { getOpenAIClient };
