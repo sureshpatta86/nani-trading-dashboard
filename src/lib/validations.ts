@@ -5,7 +5,7 @@ import { MOODS, TRADE_TYPES } from "@/types/trading";
 // Common Validators
 // ============================================================================
 
-export const emailSchema = z.string().email("Invalid email address").toLowerCase();
+export const emailSchema = z.string().trim().email("Invalid email address").toLowerCase();
 
 export const passwordSchema = z
   .string()
@@ -24,7 +24,7 @@ export const positiveInt = z.number().int().positive("Must be a positive integer
 // ============================================================================
 
 export const signupSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long").optional(),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name too long").optional(),
   email: emailSchema,
   password: passwordSchema,
 });
@@ -50,9 +50,9 @@ export const createIntradayTradeSchema = z.object({
   tradeDate: z.string().or(z.date()).transform((val) => new Date(val)),
   script: z
     .string()
-    .min(1, "Script is required")
-    .max(20, "Script name too long")
-    .toUpperCase(),
+    .transform((val) => val.trim())
+    .pipe(z.string().min(1, "Script is required").max(50, "Script name too long"))
+    .transform((val) => val.toUpperCase()),
   type: tradeTypeSchema,
   quantity: z.coerce.number().int().positive("Quantity must be positive"),
   buyPrice: z.coerce.number().positive("Buy price must be positive"),
@@ -60,7 +60,7 @@ export const createIntradayTradeSchema = z.object({
   profitLoss: z.coerce.number().optional(),
   charges: z.coerce.number().min(0).default(0),
   netProfitLoss: z.coerce.number().optional(),
-  remarks: z.string().max(500, "Remarks too long").optional().nullable(),
+  remarks: z.string().trim().max(500, "Remarks too long").optional().nullable(),
   followSetup: z.boolean().default(true),
   mood: moodSchema.default("CALM"),
 });
@@ -68,7 +68,7 @@ export const createIntradayTradeSchema = z.object({
 export const updateIntradayTradeSchema = z.object({
   date: z.string().or(z.date()).transform((val) => new Date(val)).optional(),
   day: z.string().optional(),
-  script: z.string().max(20).toUpperCase().optional(),
+  script: z.string().transform((val) => val.trim()).pipe(z.string().max(50)).transform((val) => val.toUpperCase()).optional(),
   buySell: tradeTypeSchema.optional(),
   quantity: z.coerce.number().int().positive().optional(),
   entryPrice: z.coerce.number().positive().optional(),
@@ -76,7 +76,7 @@ export const updateIntradayTradeSchema = z.object({
   points: z.coerce.number().optional(),
   profitLoss: z.coerce.number().optional(),
   followSetup: z.boolean().optional(),
-  remarks: z.string().max(500).optional().nullable(),
+  remarks: z.string().trim().max(500).optional().nullable(),
   mood: moodSchema.optional(),
 });
 
@@ -92,13 +92,12 @@ export const intradayQuerySchema = z.object({
 export const createPortfolioStockSchema = z.object({
   symbol: z
     .string()
-    .min(1, "Symbol is required")
-    .max(20, "Symbol too long")
-    .toUpperCase()
-    .or(z.string().min(1).max(20).toUpperCase().transform((v) => v)),
-  stockName: z.string().max(20).toUpperCase().optional(),
-  name: z.string().max(100, "Display name too long").optional().nullable(),
-  displayName: z.string().max(100).optional().nullable(),
+    .transform((val) => val.trim())
+    .pipe(z.string().min(1, "Symbol is required").max(50, "Symbol too long"))
+    .transform((val) => val.toUpperCase()),
+  stockName: z.string().trim().max(50).toUpperCase().optional(),
+  name: z.string().trim().max(100, "Display name too long").optional().nullable(),
+  displayName: z.string().trim().max(100).optional().nullable(),
   quantity: z.coerce.number().int().positive("Quantity must be positive"),
   buyPrice: z.coerce.number().positive("Buy price must be positive").optional(),
   averagePrice: z.coerce.number().positive().optional(),
@@ -109,10 +108,10 @@ export const createPortfolioStockSchema = z.object({
 });
 
 export const updatePortfolioStockSchema = z.object({
-  symbol: z.string().max(20).toUpperCase().optional(),
-  stockName: z.string().max(20).toUpperCase().optional(),
-  name: z.string().max(100).optional().nullable(),
-  displayName: z.string().max(100).optional().nullable(),
+  symbol: z.string().trim().max(50).toUpperCase().optional(),
+  stockName: z.string().trim().max(50).toUpperCase().optional(),
+  name: z.string().trim().max(100).optional().nullable(),
+  displayName: z.string().trim().max(100).optional().nullable(),
   quantity: z.coerce.number().int().positive().optional(),
   buyPrice: z.coerce.number().positive().optional(),
   averagePrice: z.coerce.number().positive().optional(),
@@ -124,7 +123,7 @@ export const updatePortfolioStockSchema = z.object({
 // ============================================================================
 
 export const updateProfileSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long").optional(),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name too long").optional(),
   initialCapital: z.coerce.number().min(0, "Initial capital cannot be negative").optional(),
 });
 
