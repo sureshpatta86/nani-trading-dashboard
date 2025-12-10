@@ -85,7 +85,8 @@ model IntradayTrade {
   entryPrice      Float
   exitPrice       Float
   points          Float    // Difference in points
-  profitLoss      Float    // P&L in rupees
+  charges         Float    @default(0) // Brokerage, STT, taxes, etc.
+  profitLoss      Float    // P&L in rupees (net of charges)
   followSetup     Boolean  // Did trader follow the setup?
   remarks         String?  @db.Text
   mood            String   @default("CALM") // Trader's emotional state: CALM, ANXIOUS, CONFIDENT, OVERCONFIDENT, FOMO, PANICKED
