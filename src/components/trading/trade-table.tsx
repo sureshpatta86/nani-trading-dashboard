@@ -10,8 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Trash2, Edit2, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Trash2, Edit2, BarChart3, CandlestickChart } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import type { IntradayTrade } from "@/types/trading";
 
 // Mood emoji mapping
@@ -85,7 +86,15 @@ export function TradeTable({ trades, onEdit, onDelete, isLoading }: TradeTablePr
                   <TableCell className="whitespace-nowrap">
                     {new Date(trade.tradeDate).toLocaleDateString("en-IN")}
                   </TableCell>
-                  <TableCell className="font-medium">{trade.script}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link 
+                      href={`/stock/${trade.script}.NS`}
+                      className="flex items-center gap-1 hover:text-primary transition-colors group"
+                    >
+                      {trade.script}
+                      <CandlestickChart className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${

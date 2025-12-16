@@ -46,6 +46,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { TradingStreak, PerformanceHeatmap } from "@/components/dashboard";
 import type { PeriodType, IntradayTrade, PortfolioStock } from "@/types/trading";
 
 // Fetcher for SWR
@@ -406,6 +407,14 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground mt-1">{t("followingPlan")}</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Trading Streak & Heatmap Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <TradingStreak tradeDates={trades.map((t) => t.tradeDate)} />
+          <div className="lg:col-span-2">
+            <PerformanceHeatmap trades={trades} months={3} />
+          </div>
         </div>
 
         {/* Charts Section */}

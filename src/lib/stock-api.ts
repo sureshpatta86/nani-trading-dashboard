@@ -142,3 +142,113 @@ export function isMarketOpen(): boolean {
   
   return currentMinutes >= marketOpen && currentMinutes <= marketClose;
 }
+
+/**
+ * Historical chart data response from Yahoo Finance
+ */
+interface YahooHistoricalResponse {
+  chart: {
+    result: Array<{
+      meta: {
+        symbol: string;
+        regularMarketPrice: number;
+      };
+      timestamp: number[];
+      indicators: {
+        quote: Array<{
+          open: number[];
+          high: number[];
+          low: number[];
+          close: number[];
+          volume: number[];
+        }>;
+      };
+    }>;
+    error: null | { code: string; description: string };
+  };
+}
+
+export interface HistoricalDataPoint {
+  time: number; // Unix timestamp in seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export type ChartRange = "1d" | "5d" | "1mo" | "3mo" | "6mo" | "1y" | "2y" | "5y" | "max";
+export type ChartInterval = "1m" | "5m" | "15m" | "30m" | "1h" | "1d" | "1wk" | "1mo";
+
+/**
+ * Fetch historical chart data from Yahoo Finance
+ */
+export async function fetchChartData(
+  symbol: string,
+  range: ChartRange = "3mo",
+  interval: ChartInterval = "1d"
+): Promise<HistoricalDataPoint[]> {
+  try {
+    let normalizedSymbol = symbol.toUpperCase();
+    if (!normalizedSymbol.includes(".NS") && !normalizedSymbol.includes(".BO")) {
+      normalizedSymbol = `${normalizedSymbol}.NS`;
+    }
+
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${normalizedSymbol}?range=${range}&interval=${interval}`;
+
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+      },
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    });
+
+    if (!response.ok) {
+      console.error(`Yahoo Finance API error: ${response.status}`);
+      return [];
+    }
+
+    const data: YahooHistoricalResponse = await response.json();
+
+    if (data.chart.error || !data.chart.result?.[0]) {
+      console.warn(`No historical data for ${normalizedSymbol}`);
+      return [];
+    }
+
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp || [];
+    const quote = result.indicators.quote[0];
+
+    if (!quote || timestamps.length === 0) {
+      return [];
+    }
+
+    const chartData: HistoricalDataPoint[] = [];
+
+    for (let i = 0; i < timestamps.length; i++) {
+      // Skip if any value is null (happens on holidays/gaps)
+      if (
+        quote.open[i] == null ||
+        quote.high[i] == null ||
+        quote.low[i] == null ||
+        quote.close[i] == null
+      ) {
+        continue;
+      }
+
+      chartData.push({
+        time: timestamps[i],
+        open: Math.round(quote.open[i] * 100) / 100,
+        high: Math.round(quote.high[i] * 100) / 100,
+        low: Math.round(quote.low[i] * 100) / 100,
+        close: Math.round(quote.close[i] * 100) / 100,
+        volume: quote.volume[i] || 0,
+      });
+    }
+
+    return chartData;
+  } catch (error) {
+    console.error(`Error fetching chart data for ${symbol}:`, error);
+    return [];
+  }
+}

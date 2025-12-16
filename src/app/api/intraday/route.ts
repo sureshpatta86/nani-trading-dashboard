@@ -31,16 +31,23 @@ export async function GET(request: NextRequest) {
     const requestedPage = parseInt(searchParams.get("page") || "1");
     const requestedLimit = parseInt(searchParams.get("limit") || String(DEFAULT_PAGE_SIZE));
     const allRecords = searchParams.get("all") === "true";
+    const scriptFilter = searchParams.get("script")?.trim().toUpperCase();
     
     // Apply pagination by default unless explicitly requesting all
     const page = Math.max(1, requestedPage);
     const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, requestedLimit));
     
+    // Build where clause with optional script filter
+    const whereClause = {
+      userId,
+      ...(scriptFilter && { script: scriptFilter }),
+    };
+    
     // Get total count for pagination
-    const total = await prisma.intradayTrade.count({ where: { userId } });
+    const total = await prisma.intradayTrade.count({ where: whereClause });
 
     const trades = await prisma.intradayTrade.findMany({
-      where: { userId },
+      where: whereClause,
       orderBy: { date: "desc" },
       ...(!allRecords && {
         skip: (page - 1) * limit,

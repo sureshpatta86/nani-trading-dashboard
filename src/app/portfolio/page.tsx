@@ -27,7 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, RefreshCw, Download, Upload, Briefcase, PieChart, Wallet, BarChart3, Loader2 } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Trash2, Edit2, RefreshCw, Download, Upload, Briefcase, PieChart, Wallet, BarChart3, Loader2, CandlestickChart } from "lucide-react";
+import Link from "next/link";
 import { CSVImportDialog } from "@/components/csv-import-dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -639,6 +640,11 @@ TCS.NS,Tata Consultancy Services,50,3400.00,20/11/2025`}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Link href={`/stock/${stock.symbol}`}>
+                            <Button variant="ghost" size="sm" aria-label="View Chart">
+                              <CandlestickChart className="h-4 w-4 text-primary" />
+                            </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="sm"

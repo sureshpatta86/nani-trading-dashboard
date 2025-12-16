@@ -34,7 +34,7 @@ export default async function RootLayout({
               attribute="class"
               defaultTheme="dark"
               enableSystem
-              themes={["light", "dark", "dark2", "blue", "neogreen", "ironman", "golden", "silver", "maroon", "purple", "celestial", "emerald", "system"]}
+              themes={["light", "dark", "dark2", "blue", "neogreen", "ironman", "golden", "silver", "maroon", "purple", "celestial", "emerald", "rose", "sunset", "dracula", "nord", "monokai", "tokyo", "obsidian", "system"]}
               disableTransitionOnChange
             >
               {children}

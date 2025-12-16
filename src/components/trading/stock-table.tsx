@@ -10,8 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Trash2, Edit2, Briefcase } from "lucide-react";
+import { TrendingUp, TrendingDown, Trash2, Edit2, Briefcase, CandlestickChart } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import type { PortfolioStock } from "@/types/trading";
 
 interface StockTableProps {
@@ -72,7 +73,15 @@ export function StockTable({ stocks, onEdit, onDelete, isLoading }: StockTablePr
             <TableBody>
               {stocks.map((stock) => (
                 <TableRow key={stock.id}>
-                  <TableCell className="font-medium">{stock.symbol}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link 
+                      href={`/stock/${stock.symbol}`}
+                      className="flex items-center gap-1 hover:text-primary transition-colors group"
+                    >
+                      {stock.symbol}
+                      <CandlestickChart className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </TableCell>
                   <TableCell>{stock.name || "-"}</TableCell>
                   <TableCell className="text-right">{stock.quantity}</TableCell>
                   <TableCell className="text-right">₹{stock.buyPrice.toFixed(2)}</TableCell>
@@ -107,7 +116,16 @@ export function StockTable({ stocks, onEdit, onDelete, isLoading }: StockTablePr
                     {new Date(stock.purchaseDate).toLocaleDateString("en-IN")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1">
+                      <Link href={`/stock/${stock.symbol}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label="View Chart"
+                        >
+                          <CandlestickChart className="h-4 w-4 text-primary" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"

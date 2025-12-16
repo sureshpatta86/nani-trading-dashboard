@@ -21,11 +21,18 @@ const themeNames: Record<string, string> = {
   purple: "Deep Purple",
   celestial: "Celestial Blue",
   emerald: "Emerald Green",
+  rose: "Rose Pink",
+  sunset: "Sunset Orange",
   dark: "Midnight Dark",
   dark2: "Slate Grey",
   blue: "Dark Blue",
   neogreen: "Neo Green",
   ironman: "Iron Man",
+  dracula: "Dracula",
+  nord: "Nord",
+  monokai: "Monokai",
+  tokyo: "Tokyo Night",
+  obsidian: "Obsidian",
   system: "System",
 }
 
@@ -73,6 +80,12 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("emerald")}>
           Emerald Green
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("rose")}>
+          Rose Pink
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("sunset")}>
+          Sunset Orange
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* Dark Themes */}
         <DropdownMenuItem onClick={() => setTheme("dark")}>
@@ -89,6 +102,21 @@ export function ThemeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("ironman")}>
           Iron Man
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dracula")}>
+          Dracula
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("nord")}>
+          Nord
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("monokai")}>
+          Monokai
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("tokyo")}>
+          Tokyo Night
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("obsidian")}>
+          Obsidian
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* System */}

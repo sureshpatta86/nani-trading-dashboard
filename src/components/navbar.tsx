@@ -29,10 +29,12 @@ import {
   Search,
   ExternalLink,
   ChevronRight,
+  Command,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSelector } from "@/components/language-selector";
+import { CommandMenu } from "@/components/command-menu";
 import { useState } from "react";
 
 const navigationItems = [
@@ -68,18 +70,18 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="w-[95%] max-w-[1800px] mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center space-x-2.5 group">
+        <div className="flex h-14 items-center justify-between">
+          <div className="flex items-center gap-4 xl:gap-6">
+            <Link href="/" className="flex items-center space-x-2 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary rounded-lg blur-sm opacity-75 group-hover:opacity-100 transition-opacity" />
-                <div className="relative h-9 w-9 bg-primary rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-primary-foreground" />
+                <div className="relative h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-primary-foreground" />
                 </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-bold leading-tight">{t("brandName")}</span>
-                <span className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">{t("brandTagline")}</span>
+              <div className="hidden sm:flex flex-col">
+                <span className="text-base font-bold leading-tight">{t("brandName")}</span>
+                <span className="text-[9px] text-muted-foreground font-medium tracking-wider uppercase">{t("brandTagline")}</span>
               </div>
             </Link>
 
@@ -92,7 +94,7 @@ export function Navbar() {
                     key={item.nameKey}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                      "flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 whitespace-nowrap",
                       isActive
                         ? "bg-primary/10 text-primary shadow-sm"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -158,7 +160,12 @@ export function Navbar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Command Menu / Search */}
+            <div className="hidden md:block">
+              <CommandMenu />
+            </div>
+            
             <LanguageSelector />
             <ThemeToggle />
             

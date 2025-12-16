@@ -493,6 +493,158 @@
     --warning: 30 90% 55%;
     --warning-foreground: 0 5% 7%;
   }
+
+  /* Rose Pink - Soft pink romantic theme */
+  .rose {
+    --background: 340 30% 97%;
+    --foreground: 340 40% 15%;
+    --card: 340 25% 95%;
+    --card-foreground: 340 40% 15%;
+    --popover: 340 25% 95%;
+    --popover-foreground: 340 40% 15%;
+    --primary: 340 75% 55%;
+    --primary-foreground: 340 30% 97%;
+    --secondary: 340 20% 90%;
+    --secondary-foreground: 340 40% 20%;
+    --muted: 340 15% 92%;
+    --muted-foreground: 340 20% 45%;
+    --accent: 350 70% 60%;
+    --accent-foreground: 340 30% 97%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 340 30% 97%;
+    --border: 340 20% 88%;
+    --input: 340 20% 88%;
+    --ring: 340 75% 55%;
+    --chart-1: 340 75% 55%;
+    --chart-2: 350 70% 60%;
+    --chart-3: 330 65% 55%;
+    --chart-4: 355 60% 65%;
+    --chart-5: 320 70% 50%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 340 75% 55%;
+    --gradient-end: 320 70% 50%;
+    
+    /* Success/Error colors */
+    --success: 142 76% 36%;
+    --success-foreground: 340 30% 97%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 340 40% 15%;
+  }
+
+  /* Dracula - Popular dark theme with purple/pink accents */
+  .dracula {
+    --background: 231 15% 18%;
+    --foreground: 60 30% 96%;
+    --card: 232 14% 21%;
+    --card-foreground: 60 30% 96%;
+    --popover: 232 14% 21%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 265 89% 78%;
+    --primary-foreground: 231 15% 18%;
+    --secondary: 232 14% 31%;
+    --secondary-foreground: 60 30% 96%;
+    --muted: 232 14% 25%;
+    --muted-foreground: 60 10% 65%;
+    --accent: 326 100% 74%;
+    --accent-foreground: 231 15% 18%;
+    --destructive: 0 100% 67%;
+    --destructive-foreground: 60 30% 96%;
+    --border: 232 14% 28%;
+    --input: 232 14% 28%;
+    --ring: 265 89% 78%;
+    --chart-1: 265 89% 78%;
+    --chart-2: 326 100% 74%;
+    --chart-3: 135 94% 65%;
+    --chart-4: 191 97% 77%;
+    --chart-5: 65 92% 76%;
+    
+    /* Custom gradient colors - Purple to Pink */
+    --gradient-start: 265 89% 78%;
+    --gradient-end: 326 100% 74%;
+    
+    /* Success/Error colors */
+    --success: 135 94% 65%;
+    --success-foreground: 231 15% 18%;
+    --warning: 65 92% 76%;
+    --warning-foreground: 231 15% 18%;
+  }
+
+  /* Sunset Orange - Warm sunset vibes */
+  .sunset {
+    --background: 30 50% 97%;
+    --foreground: 20 60% 15%;
+    --card: 30 45% 95%;
+    --card-foreground: 20 60% 15%;
+    --popover: 30 45% 95%;
+    --popover-foreground: 20 60% 15%;
+    --primary: 20 90% 55%;
+    --primary-foreground: 30 50% 97%;
+    --secondary: 30 35% 90%;
+    --secondary-foreground: 20 60% 20%;
+    --muted: 30 30% 92%;
+    --muted-foreground: 20 30% 45%;
+    --accent: 10 85% 60%;
+    --accent-foreground: 30 50% 97%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 30 50% 97%;
+    --border: 30 35% 85%;
+    --input: 30 35% 85%;
+    --ring: 20 90% 55%;
+    --chart-1: 20 90% 55%;
+    --chart-2: 10 85% 60%;
+    --chart-3: 35 95% 50%;
+    --chart-4: 5 80% 65%;
+    --chart-5: 45 90% 55%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 20 90% 55%;
+    --gradient-end: 45 90% 55%;
+    
+    /* Success/Error colors */
+    --success: 142 76% 36%;
+    --success-foreground: 30 50% 97%;
+    --warning: 45 90% 55%;
+    --warning-foreground: 20 60% 15%;
+  }
+
+  /* Nord Dark - Popular Scandinavian-inspired dark theme */
+  .nord {
+    --background: 220 16% 16%;
+    --foreground: 218 27% 88%;
+    --card: 220 16% 20%;
+    --card-foreground: 218 27% 88%;
+    --popover: 220 16% 20%;
+    --popover-foreground: 218 27% 88%;
+    --primary: 193 43% 67%;
+    --primary-foreground: 220 16% 16%;
+    --secondary: 220 16% 28%;
+    --secondary-foreground: 218 27% 88%;
+    --muted: 220 16% 24%;
+    --muted-foreground: 219 14% 60%;
+    --accent: 179 25% 65%;
+    --accent-foreground: 220 16% 16%;
+    --destructive: 354 42% 56%;
+    --destructive-foreground: 218 27% 88%;
+    --border: 220 16% 28%;
+    --input: 220 16% 28%;
+    --ring: 193 43% 67%;
+    --chart-1: 193 43% 67%;
+    --chart-2: 179 25% 65%;
+    --chart-3: 213 32% 52%;
+    --chart-4: 311 20% 63%;
+    --chart-5: 92 28% 65%;
+    
+    /* Custom gradient colors */
+    --gradient-start: 193 43% 67%;
+    --gradient-end: 213 32% 52%;
+    
+    /* Success/Error colors */
+    --success: 92 28% 65%;
+    --success-foreground: 220 16% 16%;
+    --warning: 40 71% 73%;
+    --warning-foreground: 220 16% 16%;
+  }
 }
 
 /* Iron Man Arc Reactor Glow Effects */
@@ -681,8 +833,103 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover,
 .dark2 .scrollbar-thin::-webkit-scrollbar-thumb:hover,
-.blue .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+.blue .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.dracula .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.nord .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.monokai .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.tokyo .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.obsidian .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-500;
+}
+
+/* Obsidian Theme - Premium dark with crystal-clear readability */
+.obsidian {
+  --background: 228 14% 6%;
+  --foreground: 210 40% 98%;
+  --card: 228 14% 10%;
+  --card-foreground: 210 40% 98%;
+  --popover: 228 14% 10%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 199 89% 60%;
+  --primary-foreground: 228 14% 6%;
+  --secondary: 228 14% 14%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 228 14% 16%;
+  --muted-foreground: 215 20% 70%;
+  --accent: 172 66% 50%;
+  --accent-foreground: 228 14% 6%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 228 14% 18%;
+  --input: 228 14% 14%;
+  --ring: 199 89% 60%;
+  --radius: 0.75rem;
+  --chart-1: 199 89% 60%;
+  --chart-2: 172 66% 50%;
+  --chart-3: 291 64% 60%;
+  --chart-4: 43 96% 58%;
+  --chart-5: 0 84% 60%;
+  color-scheme: dark;
+}
+
+/* Monokai Dark Theme - Classic vibrant dark theme */
+.monokai {
+  --background: 40 3% 13%;
+  --foreground: 60 30% 96%;
+  --card: 40 3% 16%;
+  --card-foreground: 60 30% 96%;
+  --popover: 40 3% 16%;
+  --popover-foreground: 60 30% 96%;
+  --primary: 80 76% 53%;
+  --primary-foreground: 40 3% 13%;
+  --secondary: 40 3% 20%;
+  --secondary-foreground: 60 30% 96%;
+  --muted: 40 3% 20%;
+  --muted-foreground: 60 10% 70%;
+  --accent: 338 95% 56%;
+  --accent-foreground: 60 30% 96%;
+  --destructive: 338 95% 56%;
+  --destructive-foreground: 60 30% 96%;
+  --border: 40 3% 25%;
+  --input: 40 3% 25%;
+  --ring: 80 76% 53%;
+  --radius: 0.75rem;
+  --chart-1: 80 76% 53%;
+  --chart-2: 338 95% 56%;
+  --chart-3: 190 81% 67%;
+  --chart-4: 32 98% 56%;
+  --chart-5: 261 100% 75%;
+  color-scheme: dark;
+}
+
+/* Tokyo Night Theme - Modern Japanese city aesthetic */
+.tokyo {
+  --background: 235 21% 13%;
+  --foreground: 220 13% 91%;
+  --card: 235 21% 16%;
+  --card-foreground: 220 13% 91%;
+  --popover: 235 21% 16%;
+  --popover-foreground: 220 13% 91%;
+  --primary: 217 92% 76%;
+  --primary-foreground: 235 21% 13%;
+  --secondary: 235 21% 21%;
+  --secondary-foreground: 220 13% 91%;
+  --muted: 235 21% 21%;
+  --muted-foreground: 220 13% 65%;
+  --accent: 267 84% 81%;
+  --accent-foreground: 235 21% 13%;
+  --destructive: 0 63% 72%;
+  --destructive-foreground: 220 13% 91%;
+  --border: 235 21% 25%;
+  --input: 235 21% 25%;
+  --ring: 217 92% 76%;
+  --radius: 0.75rem;
+  --chart-1: 217 92% 76%;
+  --chart-2: 267 84% 81%;
+  --chart-3: 115 68% 72%;
+  --chart-4: 28 100% 72%;
+  --chart-5: 0 63% 72%;
+  color-scheme: dark;
 }
 
 /* Print styles for PDF export */
