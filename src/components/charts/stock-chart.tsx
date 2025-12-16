@@ -362,8 +362,6 @@ export function StockChart({
       });
     }
 
-    setIsReady(true);
-
     // Handle resize
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -380,7 +378,11 @@ export function StockChart({
 
     window.addEventListener("resize", handleResize);
 
+    // Mark chart as ready after setup is complete (using setTimeout to avoid sync setState in effect)
+    const timeoutId = setTimeout(() => setIsReady(true), 0);
+
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener("resize", handleResize);
       chart.remove();
       rsiChart?.remove();

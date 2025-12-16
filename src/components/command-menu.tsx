@@ -53,7 +53,7 @@ export function CommandMenu({ recentStocks = [] }: CommandMenuProps) {
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
     command();
-  }, []);
+  }, [setOpen]);
 
   const navigationItems = [
     { name: t("dashboard"), href: "/", icon: LayoutDashboard, shortcut: "D" },
