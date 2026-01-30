@@ -27,8 +27,42 @@ model User {
   sessions      Session[]
   intradayTrades IntradayTrade[]
   portfolioStocks PortfolioStock[]
+  withdrawals   Withdrawal[]
+  deposits      Deposit[]
   
   @@map("users")
+}
+
+// Deposit model for tracking capital additions
+model Deposit {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float    // Deposit amount in rupees
+  date        DateTime // Date of deposit
+  reason      String?  @db.Text // Optional reason/notes for the deposit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, date])
+  @@map("deposits")
+}
+
+// Withdrawal model for tracking capital withdrawals
+model Withdrawal {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float    // Withdrawal amount in rupees
+  date        DateTime // Date of withdrawal
+  reason      String?  @db.Text // Optional reason/notes for the withdrawal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, date])
+  @@map("withdrawals")
 }
 
 // NextAuth.js Account model
