@@ -11,22 +11,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        initialCapital: true,
-        createdAt: true,
-      },
-    });
+    const [user, depositAgg, withdrawalAgg] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          initialCapital: true,
+          createdAt: true,
+        },
+      }),
+      prisma.deposit.aggregate({
+        where: { userId: session.user.id },
+        _sum: { amount: true },
+      }),
+      prisma.withdrawal.aggregate({
+        where: { userId: session.user.id },
+        _sum: { amount: true },
+      }),
+    ]);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    const totalDeposits = depositAgg._sum.amount ?? 0;
+    const totalWithdrawals = withdrawalAgg._sum.amount ?? 0;
+    const currentCapital = user.initialCapital + totalDeposits - totalWithdrawals;
+
+    return NextResponse.json({
+      ...user,
+      totalDeposits,
+      totalWithdrawals,
+      currentCapital,
+    });
   } catch (error) {
     console.error("Error fetching profile:", error);
     return NextResponse.json(
