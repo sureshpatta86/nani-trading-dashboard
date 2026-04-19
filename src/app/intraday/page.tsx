@@ -90,12 +90,14 @@ export default function IntradayLogPage() {
     status === "authenticated" ? "/api/profile" : null,
     fetcher,
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes
+      revalidateOnFocus: true,
+      dedupingInterval: 30000,
     }
   );
-  
-  const initialCapital = profileData?.initialCapital || 0;
+
+  // Capital base reflects deposits and withdrawals made on the profile page.
+  const initialCapital =
+    profileData?.currentCapital ?? profileData?.initialCapital ?? 0;
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
